@@ -9,10 +9,10 @@ sML = /* JavaScript Library */ (function() { var sML = {
 	Description : "I'm a Simple and Middling Library.",
 	Copyright   : "(c) 2013 Satoru MATSUSHIMA",
 	Licence     : "Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php",
-	Date        : "Wed June 21 13:20:00 2013 +0900",
+	Date        : "Wed June 23 09:19:00 2013 +0900",
 
 	Version     : 0.999,
-	Build       : 20130621.0,
+	Build       : 20130623.0,
 
 	WebSite     : "http://sarasa.la/sML"
 
@@ -44,8 +44,10 @@ sML.DeviceName = sML.DN = (function(nUA, v2n) {
 		Safari           : ((nUA.indexOf("Safari/")     > -1) ? v2n(nUA, /^.+Version\/([\d\.]+).+$/)     : undefined),
 		Chrome           : ((nUA.indexOf("Chrome/")     > -1) ? v2n(nUA, /^.+Chrome\/([\d\.]+).+$/)      : undefined),
 		Gecko            : ((nUA.indexOf("Gecko/")      > -1) ? v2n(nUA, /^.+rv\:([\d\.]+).+$/)          : undefined),
+		Firefox          : ((nUA.indexOf("Firefox/")    > -1) ? v2n(nUA, /^.+Firefox\/([\d\.]+).+$/)     : undefined),
 		Presto           : ((nUA.indexOf("Presto")      > -1) ? v2n(nUA, /^.+Presto\/([\d\.]+).+$/)      : undefined),
 		Opera            : ((nUA.indexOf("Opera/")      > -1) ? v2n(nUA, /^.+Version\/([\d\.]+).*$/)     : undefined),
+		Trident          : undefined,
 		InternetExplorer : undefined,
 		Flash            : undefined
 	}
@@ -68,30 +70,20 @@ try {
 } catch(e) {}
 
 /*@cc_on
-	sML.UA.InternetExplorer = document.documentMode ? document.documentMode : ((navigator.userAgent.indexOf("MSIE 7") > -1) ? 7 : 1);
+	sML.UA.Trident = sML.UA.InternetExplorer = document.documentMode ? document.documentMode : ((navigator.userAgent.indexOf("MSIE 7") > -1) ? 7 : 1);
 	try {
 		var fAX = new ActiveXObject("ShockwaveFlash.ShockwaveFlash.7"); // Farewell to Flash Player Under-7
 		sML.UA.Flash = parseFloat(fAX.GetVariable("$version").replace(/^[^\d]+(\d+)\,([\d\,]+)$/, "$1.$2").replace(/\,/g, ""));
 	} catch(e) {}
 @*/
 
-sML.OS.Apple     = sML.OS.Apl = (sML.OS.OSX || sML.OS.iOS);
-sML.OS.Microsoft = sML.OS.MS  = (sML.OS.Windows);
-sML.OS.Google    = sML.OS.Ggl = (sML.OS.Android || sML.OS.Chrome);
+sML.OS.Mac = sML.OS.OSX, sML.OS.Win = sML.OS.Windows, sML.OS.Lin = sML.OS.Linux, sML.OS.And = sML.OS.Android;
 
-sML.OS.Mac = sML.OS.OSX;
-sML.OS.Win = sML.OS.Windows;
-sML.OS.Lin = sML.OS.Linux;
-sML.OS.And = sML.OS.Android;
-
-sML.UA.WK = sML.UA.WebKit;
-sML.UA.Sa = sML.UA.Safari;
-sML.UA.Ch = sML.UA.Chrome;
-sML.UA.Ge = sML.UA.Gecko;
-sML.UA.Pr = sML.UA.Presto;
-sML.UA.Op = sML.UA.Opera;
-sML.UA.IE = sML.UA.InternetExplorer;
-sML.UA.FP = sML.UA.Flash;
+sML.UA.WK = sML.UA.WebKit,  sML.UA.Sa = sML.UA.Safari, sML.UA.Ch = sML.UA.Chrome;
+sML.UA.Ge = sML.UA.Gecko,   sML.UA.Fx = sML.UA.Firefox;
+sML.UA.Pr = sML.UA.Presto,  sML.UA.Op = sML.UA.Opera;
+sML.UA.Tr = sML.UA.Trident, sML.UA.IE = sML.UA.InternetExplorer;
+sML.UA.Fl = sML.UA.Flash;
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -203,7 +195,7 @@ sML.onresizefont = sML.onResizeFont = {
 		if(!T) var T = 200;
 		this.checker = E;
 		this.timer = setInterval(function() {
-			var currentHeight = sML.coord.getElementSize(sML.onResizeFont.checker).h;
+			var currentHeight = sML.Coord.getElementSize(sML.onResizeFont.checker).h;
 			if(sML.onResizeFont.prevHeight && sML.onResizeFont.prevHeight != currentHeight) {
 				var Functions = sML.onResizeFont.RegularFunctions;
 				if(sML.onResizeFont.prevHeight && sML.onResizeFont.prevHeight < currentHeight) {
@@ -277,9 +269,7 @@ if(!document.getElementsByClassName) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 sML.getElementsByIds = document.getElementsByIds = function() {
-	for(var Es = [], L = arguments.length, i = 0; i < L; i++) {
-		if(document.getElementById(arguments[i])) Es.push(document.getElementById(arguments[i]));
-	}
+	for(var Es = [], L = arguments.length, i = 0; i < L; i++) if(document.getElementById(arguments[i])) Es.push(document.getElementById(arguments[i]));
 	return Es;
 }
 
@@ -288,59 +278,6 @@ sML.getElementsByIds = document.getElementsByIds = function() {
 sML.getElements = sML.getElementsBySelector = function() {
 	for(var i = 1, L = arguments.length; i < L; i++) arguments[0] += "," + arguments[i];
 	return document.querySelectorAll(arguments[0]);
-	/*
-	var Es = [], Ps = [document];
-	for(var aL = arguments.length, i = 0; i < aL; i++) {
-		var Ss = arguments[i].replace(/>/g, " >").split(" ");
-		for(var sL = Ss.length, j = 0; j < sL; j++) {
-			for(var pL = Ps.length, k = 0; k < pL; k++) {
-				var tEs = [], IDCheck = "", CNCheck = "", TNCheck = "";
-				if(Ss[j].charAt(0) == ">") {
-					var ChildOnly = 1;
-					Ss[j] = Ss[j].replace(/^>/, "");
-				}
-				var Req = Ss[j].replace(/([>\.#])/g, ",$1").replace(/^\,/, "").split(",");
-				for(var rL = Req.length, l = 0; l < rL; l++) {
-					     if(Req[l].charAt(0) == "#") IDCheck  = Req[l].replace(/^#/, "");
-					else if(Req[l].charAt(0) == ".") CNCheck += Req[l].replace(/^./, "") + " ";
-					else                             TNCheck  = Req[l].toUpperCase();
-				}
-				if(CNCheck) CNCheck = CNCheck.replace(/ $/, "");
-				if(IDCheck) {
-					var Cs = [document.getElementById(IDCheck)];
-					if(Cs.length && TNCheck) {
-						if(Cs[0].tagName.toUpperCase() != TNCheck) Cs = [];
-					}
-					if(Cs.length && CNCheck) {
-						var CNs = CNCheck.split(" ");
-						for(var cnL = CNs.length, l = 0; l < cnL; l++) {
-							if(Cs[0].className.indexOf(CNs[l]) < 0) {
-								Cs = [];
-								break;
-							}
-						}
-					}
-				} else if(CNCheck) {
-					var Cs = Ps[k].getElementsByClassName(CNCheck);
-					if(TNCheck) {
-						for(var ttEs = [], cL = Cs.length, l = 0; l < cL; l++) {
-							if(Cs[l].tagName.toUpperCase() == TNCheck) ttEs.push(Cs[l]);
-						}
-						Cs = ttEs;
-					}
-				} else if(TNCheck) {
-					var Cs = Ps[k].getElementsByTagName(TNCheck);
-				}
-				if(ChildOnly) { for(var cL = Cs.length, l = 0; l < cL; l++) if(Cs[l].parentNode == Ps[k]) tEs.push(Cs[l]); }
-				else          { for(var cL = Cs.length, l = 0; l < cL; l++)                               tEs.push(Cs[l]); }
-			}
-			if(Ss[j].indexOf(">") > -1) Ss[j].split(">")[0];
-			Ps = tEs;
-		}
-		Es = Es.concat(tEs);
-	}
-	return Es;
-	*/
 }
 
 sML.getInnerText = function(E) {
@@ -362,12 +299,12 @@ sML.set = sML.edit = sML.setMembers = function(O, M, S) {
 }
 
 sML.create = sML.createElement = function(tagName, M, S) {
-	return (tagName ? sML.edit(document.createElement(tagName), M, S) : null);
+	return (tagName ? sML.set(document.createElement(tagName), M, S) : null);
 }
 
 sML.changeClass = sML.changeClassName = function(E, CN) {
 	if(CN) E.className = CN;
-	else /*@cc_on E.removeAttribute("className"); // @*/ E.removeAttribute("class");
+	else /*@cc_on if(sML.UA.IE < 10) { E.removeAttribute("className"); } else @*/ E.removeAttribute("class");
 	return E.className;
 }
 
@@ -533,7 +470,7 @@ sML.CSS = sML.S = {
 	setProperty: function(E, P, V, pfx) {
 		if(!E || !P) return E;
 		     if(P == "opacity") return this.setOpacity(E, V); // 2012/11/01
-		else if(/^transition|transform|column|filter/.test(P)) pfx = true; // 2013/06/12
+		else if(/^transition|transform|column|filter|writing/.test(P)) pfx = true; // 2013/06/12
 		else if(P == "float") /*@cc_on P = "styleFloat"; // @*/ P = "cssFloat";
 		if(pfx) E.style[this.Prefix + P] = V;
 		E.style[P] = V;
@@ -588,11 +525,7 @@ sML.CSS = sML.S = {
 	}
 }
 
-// compatibility
-sML.getComputedStyle = sML.CSS.getComputedStyle;
-sML.style = sML.CSS.set;
-sML.getOpacity = sML.CSS.getOpacity, sML.setOpacity = sML.CSS.setOpacity;
-sML.setFloat = sML.CSS.setFloat;
+sML.style = sML.css = function(E, PV, Cb) { return sML.CSS.set(E, PV, Cb); }
 
 
 
@@ -658,6 +591,8 @@ sML.Transition = sML.T = {
 		})();
 	}
 }
+
+sML.transition = function(E, Ps, Fs) { return sML.Transition.begin(E, Ps, Fs); }
 
 
 
@@ -913,17 +848,17 @@ sML.Coord = sML.C = {
 		if(!ForceScroll) this.addScrollCancelation();
 	},
 	addScrollCancelation : function() {
-		   sML.addEventListener(document, "mousedown",      sML.coord.cancelScrolling);
-		   sML.addEventListener(document, "keydown",        sML.coord.cancelScrolling);
-		   sML.addEventListener(document, "mousewheel",     sML.coord.cancelScrolling);
-		   sML.addEventListener(document, "DOMMouseScroll", sML.coord.cancelScrolling);
+		   sML.addEventListener(document, "mousedown",      sML.Coord.cancelScrolling);
+		   sML.addEventListener(document, "keydown",        sML.Coord.cancelScrolling);
+		   sML.addEventListener(document, "mousewheel",     sML.Coord.cancelScrolling);
+		   sML.addEventListener(document, "DOMMouseScroll", sML.Coord.cancelScrolling);
 	},
 	cancelScrolling : function() {
-		clearTimeout(sML.coord.timer);
-		sML.removeEventListener(document, "mousedown",      sML.coord.cancelScrolling);
-		sML.removeEventListener(document, "keydown",        sML.coord.cancelScrolling);
-		sML.removeEventListener(document, "mousewheel",     sML.coord.cancelScrolling);
-		sML.removeEventListener(document, "DOMMouseScroll", sML.coord.cancelScrolling);
+		clearTimeout(sML.Coord.timer);
+		sML.removeEventListener(document, "mousedown",      sML.Coord.cancelScrolling);
+		sML.removeEventListener(document, "keydown",        sML.Coord.cancelScrolling);
+		sML.removeEventListener(document, "mousewheel",     sML.Coord.cancelScrolling);
+		sML.removeEventListener(document, "DOMMouseScroll", sML.Coord.cancelScrolling);
 	},
 	preventUserScrolling: function() {
 		   sML.addEventListener(document, "mousedown",      sML.preventDefault);
@@ -939,7 +874,7 @@ sML.Coord = sML.C = {
 	}
 }
 
-sML.getCoord = sML.C.getCoord;
+sML.getCoord = sML.Coord.getCoord;
 
 sML.scrollTo = function(tC, Ps, Fs, ForceScroll) {
 	if(typeof Fs == "function") Fs = { c: Fs };
@@ -966,7 +901,7 @@ sML.scrollBy = function(bD, Ps, Fs, ForceScroll) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-sML.Ajax = sML.ajax = sML.AJAX = sML.a = {
+sML.Ajax = sML.A = {
 	ships : [],
 	build : function() {
 		var ship = {};
@@ -1014,7 +949,7 @@ sML.Ajax = sML.ajax = sML.AJAX = sML.a = {
 		if(!Settings.onsuccess) Settings.onsuccess = function() {};
 		if(!Settings.onfailed)  Settings.onfailed  = function() { sML.each(arguments, function() { sML.log(this + ""); }); };
 		if(!Settings.ontimeout) Settings.ontimeout = Settings.onfailed;
-		var Ship = sML.ajax.build();
+		var Ship = this.build();
 		Ship.Timeout = 0;
 		Ship.TimeoutTimer = setTimeout(function() {
 			Ship.Timeout = 1;
@@ -1041,6 +976,7 @@ sML.Ajax = sML.ajax = sML.AJAX = sML.a = {
 	}
 }
 
+sML.ajax = function(URL, Settings) { return sML.Ajax.open(URL, Settings); }
 
 
 
