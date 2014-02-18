@@ -9,12 +9,12 @@ sML = /* JavaScript Library */ (function() { var sML = {
 	Description : "I'm a Simple and Middling Library.",
 	Copyright   : "(c) 2013 Satoru MATSUSHIMA",
 	Licence     : "Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php",
-	Date        : "Tue July 4 13:36:00 2013 +0900",
+	Date        : "Mon December 9 22:14:00 2013 +0900",
 
-	Version     : 0.9992,
-	Build       : 20130704.0,
+	Version     : 0.99934,
+	Build       : 20131209.0,
 
-	WebSite     : "http://sarasa.la/sML"
+	WebSite     : "http://sarasa.la/sML/"
 
 }
 
@@ -46,11 +46,13 @@ sML.DeviceName = sML.DN = (function(nUA, v2n) {
 		Gecko            : ((nUA.indexOf("Gecko/")      > -1) ? v2n(nUA, /^.+rv\:([\d\.]+).+$/)          : undefined),
 		Firefox          : ((nUA.indexOf("Firefox/")    > -1) ? v2n(nUA, /^.+Firefox\/([\d\.]+).+$/)     : undefined),
 		Presto           : ((nUA.indexOf("Presto")      > -1) ? v2n(nUA, /^.+Presto\/([\d\.]+).+$/)      : undefined),
-		Opera            : ((nUA.indexOf("Opera/")      > -1) ? v2n(nUA, /^.+Version\/([\d\.]+).*$/)     : undefined),
-		Trident          : undefined,
-		InternetExplorer : undefined,
+		Opera            : ((nUA.indexOf("OPR/")        > -1) ? v2n(nUA, /^.+OPR\/([\d\.]+).*$/)         : undefined),
+		Trident          : ((nUA.indexOf("Trident/")    > -1) ? v2n(nUA, /^.+Trident\/([\d\.]+).*$/)     : undefined),
+		InternetExplorer : ((nUA.indexOf("MSIE ")       > -1) ? v2n(nUA, /^.+MSIE ([\d\.]+).*$/)         : undefined),
 		Flash            : undefined
 	}
+	if(sML.UA.Trident >= 7) sML.UA.InternetExplorer = v2n(nUA, /^.+rv:([\d\.]+).*$/);
+	if(!sML.UA.Opera) sML.UA.Opera = ((nUA.indexOf("Opera/") > -1) ? v2n(nUA, /^.+Version\/([\d\.]+).*$/) : undefined);
 	if(sML.OS.OSX)     return "Mac";
 	if(sML.OS.Windows) return "PC";
 	if(sML.OS.Linux)   return "PC";
@@ -70,7 +72,6 @@ try {
 } catch(e) {}
 
 /*@cc_on
-	sML.UA.Trident = sML.UA.InternetExplorer = document.documentMode ? document.documentMode : ((navigator.userAgent.indexOf("MSIE 7") > -1) ? 7 : 1);
 	try {
 		var fAX = new ActiveXObject("ShockwaveFlash.ShockwaveFlash.7"); // Farewell to Flash Player Under-7
 		sML.UA.Flash = parseFloat(fAX.GetVariable("$version").replace(/^[^\d]+(\d+)\,([\d\,]+)$/, "$1.$2").replace(/\,/g, ""));
@@ -131,7 +132,7 @@ sML.Event.add(window, "unload", function() { sML = null; delete sML; });
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-sML.onRead = sML.onread = {
+sML.OnRead = sML.onRead = {
 	Functions: [],
 	execute: function() {
 		if(this.Executed) return;
@@ -141,8 +142,9 @@ sML.onRead = sML.onread = {
 	},
 	addEventListener: function(F) { return (this.Executed) ? F() : this.Functions.push(F); }
 }
+sML.onread = sML.ready = function(F) { return sML.OnRead.addEventListener(F); };
 
-sML.onLoad = sML.onload = {
+sML.OnLoad = sML.onLoad = {
 	Functions: [],
 	execute: function() {
 		if(this.Executed) return;
@@ -152,36 +154,34 @@ sML.onLoad = sML.onload = {
 	},
 	addEventListener: function(F) { return (this.Executed) ? F() : this.Functions.push(F); }
 }
-
-sML.done  = function(F) { return sML.onLoad.addEventListener(F); };
-sML.ready = function(F) { return sML.onRead.addEventListener(F); };
+sML.onload = sML.done  = function(F) { return sML.OnLoad.addEventListener(F); };
 
 if(document.addEventListener && (!sML.UA.WK || sML.UA.WK > 525)) {
 	document.addEventListener("DOMContentLoaded", function() {
 		document.removeEventListener("DOMContentLoaded", arguments.callee, false);
-		sML.onRead.execute();
+		sML.OnRead.execute();
 	}, false);
 } else if(document.attachEvent) {
 	document.attachEvent("onreadystatechange", function() {
 		if(document.readyState !== "complete") return;
 		document.detachEvent("onreadystatechange", arguments.callee);
-		sML.onRead.execute();
+		sML.OnRead.execute();
 	});
 	if(document.documentElement.doScroll && window == window.top) { (function() {
-		if(sML.onRead.Executed) return;
+		if(sML.OnRead.Executed) return;
 		try { document.documentElement.doScroll("left"); } catch(e) { setTimeout(arguments.callee, 0); return; }
-		sML.onRead.execute();
+		sML.OnRead.execute();
 	})(); }
-} else sML.onLoad.addEventListener(function() { sML.onRead.execute(); });
+} else sML.OnLoad.addEventListener(function() { sML.OnRead.execute(); });
 
 sML.Event.add(window, "load", function() {
 	sML.Event.remove(window, "load", arguments.callee, false);
-	sML.onLoad.execute();
+	sML.OnLoad.execute();
 }, false);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-sML.onresizefont = sML.onResizeFont = {
+sML.OnResizeFont = sML.onResizeFont = sML.onresizefont = {
 	RegularFunctions: [],
 	onZoomInFunctions: [],
 	onZoomOutFunctions: [],
@@ -263,7 +263,7 @@ if(!document.getElementsByClassName) {
 	if(window.HTMLElement && window.Document) {
 		if(HTMLElement.prototype.getElementsByClassName == undefined) HTMLElement.prototype.getElementsByClassName = sML.getElementsByClassName;
 		if(   Document.prototype.getElementsByClassName == undefined)    Document.prototype.getElementsByClassName = sML.getElementsByClassName;
-	} else sML.onRead.addEventListener(function() { sML.extendElements(document); });
+	} else sML.OnRead.addEventListener(function() { sML.extendElements(document); });
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -329,6 +329,13 @@ sML.removeClass = sML.removeClassName = function(E, CN) {
 	return sML.changeClass(E, CN);
 }
 
+sML.replaceClass = sML.replaceClassName = function(E, RCN, ACN) { sML.removeClass(E, RCN); sML.addClass(E, ACN); return E.className; }
+
+sML.appendChildren = function(Es, P) {
+	for(var L = Es.length, i = 0; i < L; i++) P.appendChild(Es[i]);
+	return Es;
+}
+
 sML.insertBefore = function(E, S) {
 	S.parentNode.insertBefore(E, S);
 	return S.previousSibling;
@@ -374,12 +381,8 @@ sML.hatch = function() {
 	return chick;
 }
 
-sML.getSelection = function() { /*@cc_on var S = document.selection.createRange().text + ""; return (S ? S : ""); @*/
-	var S = window.getSelection() + "";
-	return (S ? S : "");
-}
-
-sML.getContentDocument = function(F) { /*@cc_on return F.contentWindow.document; @*/
+sML.getContentDocument = function(F) {
+	/*@cc_on return F.contentWindow.document; @*/
 	return F.contentDocument;
 }
 
@@ -468,8 +471,7 @@ sML.CSS = sML.S = {
 	},
 	setProperty: function(E, P, V, pfx) {
 		if(!E || !P) return E;
-		     if(P == "opacity") return this.setOpacity(E, V); // 2012/11/01
-		else if(/^(animation|box|column|filter|transition|transform|writing|background-size)/.test(P)) pfx = true; // 2013/06/30
+		     if(/^(animation|background(-s|S)ize|box|break|column|filter|flow|hyphens|region|shape|transform|transition|writing)/.test(P)) pfx = true; // 2013/09/25
 		else if(P == "float") /*@cc_on P = "styleFloat"; // @*/ P = "cssFloat";
 		if(pfx) E.style[this.Prefix + P] = V;
 		E.style[P] = V;
@@ -510,24 +512,6 @@ sML.CSS = sML.S = {
 		for(var L = RGBA.length, i = 0; i < L; i++) RGBA[i] = parseInt(RGBA[i]);
 		if(!RGBA[3]) RGBA[3] = 1;
 		return RGBA;
-	},
-	getOpacity: function(Ob) {
-		/*@cc_on if(sML.UA.IE < 9) {
-			if(!Ob.style || !Ob.style.filter) return 1;
-			var Op = parseFloat(Ob.style.filter.replace(/alpha\(opacity=([\d\.]+)/, "$1")) / 100;
-			return (isNaN(Op) ? 1 : Op); 
-		} @*/
-		var Op = parseFloat(Ob.style.opacity);
-		return (isNaN(Op) ? 1 : Op);
-	},
-	setOpacity: function(Ob, Op) {
-		/*@cc_on if(sML.UA.IE < 9) {
-			if(Op >= 1) Ob.style.removeAttribute('filter');
-			else        Ob.style.filter = "alpha(opacity=" + (Op * 100) + ")";
-			return Ob;
-		} @*/
-		Ob.style.opacity = Op;
-		return Ob;
 	}
 }
 
@@ -1138,7 +1122,7 @@ sML.foreach = function(O, F, pThis) {
 	return O;
 }
 
-sML.each    = function(O, F, iN, LN) {
+sML.each = function(O, F, iN, LN) {
 	for(var L = (LN ? LN : O.length), i = (iN ? iN : 0); i < L; i++) if(F.call(O[i], i, O) === false) break;
 	return O;
 }
@@ -1232,6 +1216,88 @@ sML.insertZeroWidthSpace = sML.String.insertZeroWidthSpace;
 //==============================================================================================================================================
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
+//-- Range / Selection
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+sML.Range = {
+	getRange: function(Sides, OwnerDocument) {
+		if(!Sides) return null;
+		if(!OwnerDocument) OwnerDocument = Sides.Start.Node.ownerDocument;
+		var R = OwnerDocument.createRange();
+		R.setStart(Sides.Start.Node, (typeof Sides.Start.Index == "number" ? Sides.Start.Index : Sides.Start.Node.textContent.indexOf(Sides.Start.Text)));
+		R.setEnd(    Sides.End.Node, (typeof   Sides.End.Index == "number" ?   Sides.End.Index :   Sides.End.Node.textContent.indexOf(  Sides.End.Text) + Sides.End.Text.length));
+		return R;
+	},
+	flat: function(T) { return T.replace(/[\r\n]/g, ""); },
+	escape: function(T) { return this.flat(T).replace(/([\(\)\{\}\[\]\,\.\-\+\*\?\!\:\^\$\/\\])/g, "\\$1"); },
+	distill: function(T, F, L) { for(var D = "", i = F; i <= L; i++) D += T[i]; return D; },
+	find: function(SearchText, TargetNode) {
+		// Initialize
+		if(!TargetNode) TargetNode = document.body;
+		if(typeof SearchText != "string" || !SearchText || this.flat(TargetNode.textContent).indexOf(SearchText) < 0) return null;
+		if(TargetNode.nodeType == 3) return { Start: { Node: TargetNode, Text: SearchText }, End: { Node: TargetNode, Text: SearchText } };
+		var TextContents = [], SNI = 0, ENI = TargetNode.childNodes.length - 1, D = "", F = {};
+		for(var i = 0; i <= ENI; i++) {
+			if(this.flat(TargetNode.childNodes[i].textContent).indexOf(SearchText) >= 0) return this.find(SearchText, TargetNode.childNodes[i]);
+			TextContents.push(TargetNode.childNodes[i].textContent);
+		}
+		// Get StartNode
+		D = this.distill(TextContents, SNI + 1, ENI);
+		while(D && this.flat(D).indexOf(SearchText) >= 0) SNI++, D = this.distill(TextContents, SNI + 1, ENI);
+		var SN = TargetNode.childNodes[SNI];
+		// Get StartText
+		var SS = 0, SE = SN.textContent.length - 1, ST = "";
+		D = this.distill(SN.textContent, SS, SE);
+		while(this.flat(D) && !(new RegExp("^" + this.escape(D))).test(SearchText)) SS++, D = this.distill(SN.textContent, SS, SE);
+		ST = this.flat(D);
+		// Dive StartNode
+		while(SN.nodeType != 3) F = this.find(ST, SN), SN = F.Start.Node, ST = F.Start.Text;
+		// Get EndNode
+		D = this.distill(TextContents, SNI, ENI - 1);
+		while(D && this.flat(D).indexOf(SearchText) >= 0) ENI--, D = this.distill(TextContents, SNI, ENI - 1);
+		var EN = TargetNode.childNodes[ENI];
+		// Get EndText
+		var ES = 0, EE = EN.textContent.length - 1, ET = "";
+		D = this.distill(EN.textContent, ES, EE);
+		while(this.flat(D) && !(new RegExp(this.escape(D) + "$")).test(SearchText)) EE--, D = this.distill(EN.textContent, ES, EE);
+		ET = this.flat(D);
+		// Dive EndNode
+		while(EN.nodeType != 3) F = this.find(ET, EN), EN = F.End.Node, ET = F.End.Text;
+		// Return
+		return {
+			Start: { Node: SN, Text: ST },
+			  End: { Node: EN, Text: ET }
+		};
+	}
+}
+
+sML.Selection = {
+	selectRange: function(R) {
+		if(!R) return null;
+		var S = window.getSelection();
+		S.removeAllRanges();
+		S.addRange(R);
+		return R;
+	},
+	getSelectedText: function() {
+		/*@cc_on var S = document.selection.createRange().text + ""; return (S ? S : ""); @*/
+		var S = window.getSelection() + "";
+		return (S ? S : "");
+	}
+}
+sML.getSelection = function() { return sML.Selection.getSelectedText(); };
+
+sML.select = function(Sides, OwnerDocument)   { return sML.Selection.selectRange(sML.Range.getRange(Sides, OwnerDocument)); };
+sML.find   = function(SearchText, TargetNode) { return sML.Selection.selectRange(sML.Range.getRange(sML.Range.find(SearchText, TargetNode))); };
+
+
+
+
+
+//==============================================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
 //-- Full Screen
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
@@ -1275,6 +1341,5 @@ sML.exitFullScreen = function(D) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-sML.readied = 1; return sML; })();
-
+return sML; })();
 
