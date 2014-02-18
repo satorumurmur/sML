@@ -6,7 +6,7 @@
 sML = /* JavaScript Library */ (function() { var sML = {
 
 	Name        : "sML JavaScript Library",
-	Description : "I'm a Simple and Middling Library.",
+	Description : "I'm a Simple and Middling Library. (past)",
 	Copyright   : "(c) 2013 Satoru MATSUSHIMA",
 	Licence     : "Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php",
 	Date        : "Wed June 21 12:00:00 2013 +0900",
