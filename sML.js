@@ -4,13 +4,14 @@
 
 sML = (function() { var sML = { /*!
  *
- * # sML JavaScript Library
+ *  # sML JavaScript Library
  *
- * - "I'm a Simple and Middling Library." - http://sarasa.la/sML
- * - (c) Satoru MATSUSHIMA / Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
+ *  - "I'm a Simple and Middling Library."
+ *  - (c) Satoru MATSUSHIMA - http://sarasa.la/sML
+ *  _ Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- * - Wed June 18 13:55:00 2014 +0900
- */  Version: 0.99935, Build: 20140618.0
+ *  - Thu July 03 18:58:00 2014 +0900
+ */    Version: 0.9995, Build: 20140703.0
 }
 
 
@@ -82,7 +83,7 @@ if(sML.UA.Opera && !window.console) console = { log: opera.postError };
 
 sML.log = function() {
 	for(var Log = arguments[0], L = arguments.length, i = 1; i < L; i++) Log += ", " + arguments[i];
-	try { console.log(Log); } catch(e) {}
+	try { return console.log(Log); } catch(e) {}
 };
 
 sML.write = function() {
@@ -217,6 +218,24 @@ sML.Chain = function() {
 		if(typeof D == "number") for(var i = 0; i < D; i++) this.Functions.shift();
 	}
 };
+
+
+
+
+//==============================================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+//-- Timers
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+sML.Timers = {
+	setTimeout:  function(T, F, A1, A2, A3, A4, A5, A6, A7, A8, A9) { return setTimeout( F, T, A1, A2, A3, A4, A5, A6, A7, A8, A9); },
+	setInterval: function(T, F, A1, A2, A3, A4, A5, A6, A7, A8, A9) { return setInterval(F, T, A1, A2, A3, A4, A5, A6, A7, A8, A9); }
+};
+
+sML.setTimeout  = sML.Timers.setTimeout;
+sML.setInterval = sML.Timers.setInterval;
 
 
 
@@ -873,79 +892,67 @@ sML.scrollBy = function(bD, Ps, Fs, ForceScroll) {
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 sML.Ajax = sML.A = {
-	ships : [],
-	build : function() {
-		var ship = {};
-		try { ship.XHR = new XMLHttpRequest(); } catch(e) { try { ship.XHR = new ActiveXObject("Msxml2.XMLHTTP"); } catch(e) { try { ship.XHR = new ActiveXObject("Microsoft.XMLHTTP"); } catch(e) {} } }
-		if(!ship.XHR) return sML.log("sML.ShipBuilder could not find XHR.");
-		ship.sail = function(Ps, Fs) {
-			if(!Ps) var Ps = {};
-			if(!Fs) var Fs = {};
-			Ps.method = (Ps.method && /^POST$/i.test(Ps.method)) ? "POST" : "GET";
-			if(!Ps.auth) Ps.auth = ["", ""];
-			if(Ps.async !== false) Ps.async = true;
-			var QueryString = "";
-			if(Ps.query) for(var Q in Ps.query) QueryString += "&" + Q + "=" + encodeURIComponent(Ps.query[Q]);
-			if(QueryString) {
-				if(Ps.method == "GET") {
-					Ps.url = Ps.url + ((Ps.url.indexOf("?") > 0) ? QueryString : QueryString.replace(/^&/, "?"));
-					QueryString = null;
-				} else if(Ps.method == "POST") {
-					QueryString = QueryString.replace(/^&/, "");
-				}
-			}
-			this.XHR.onreadystatechange = function() {
-				if(Fs[1] && this.readyState == 1) return Fs[1].call(this, this.responseText, this.responseXML); // loading
-				if(Fs[2] && this.readyState == 2) return Fs[2].call(this, this.responseText, this.responseXML); // loaded
-				if(Fs[3] && this.readyState == 3) return Fs[3].call(this, this.responseText, this.responseXML); // interactive
-				if(Fs[4] && this.readyState == 4) return Fs[4].call(this, this.responseText, this.responseXML); // complete
-				if(Fs[0]                        ) return Fs[0].call(this, this.responseText, this.responseXML);
-			}
-			if(Ps.mimetype) this.XHR.overrideMimeType(Ps.mimetype);
-			this.XHR.open(Ps.method, Ps.url, Ps.async, Ps.auth[0], Ps.auth[1]);
-			if(Ps.method == "POST") this.XHR.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-			this.XHR.send(QueryString);
-			return this;
-		}
-		this.ships.push(ship);
-		return ship;
-	},
-	open : function(URL, Settings) {
-		if(typeof Settings != "object") var Settings = {};
-		if(!Settings.method)    Settings.method = "get";
-		if(!Settings.query)     Settings.query = null;
-		if(!Settings.auth)      Settings.auth = ["", ""];
-		if(!Settings.mimetype)  Settings.mimetype = null;
+	open : function(Settings) {
+		try { var XHR = new XMLHttpRequest(); } catch(e) { try { var XHR = new ActiveXObject("Msxml2.XMLHTTP"); } catch(e) { try { var XHR = new ActiveXObject("Microsoft.XMLHTTP"); } catch(e) {} } };
+		if(!XHR) return sML.log("sML.ShipBuilder could not find XHR.");
+		if(typeof Settings != "object" || typeof Settings.URI != "string" || typeof Settings.onsuccess != "function") return false;
+		if(!Settings.Query)     Settings.Query = null;
+		if(!Settings.Auth)      Settings.Auth = ["", ""];
+		if(!Settings.MimeType)  Settings.MimeType = null;
 		if(!Settings.onsuccess) Settings.onsuccess = function() {};
 		if(!Settings.onfailed)  Settings.onfailed  = function() { sML.each(arguments, function() { sML.log(this + ""); }); };
 		if(!Settings.ontimeout) Settings.ontimeout = Settings.onfailed;
-		var Ship = this.build();
-		Ship.Timeout = 0;
-		Ship.TimeoutTimer = setTimeout(function() {
-			Ship.Timeout = 1;
-			Settings.ontimeout("sML.AJAX.get Timeout: " + URL);
-		}, 10000);
-		Ship.sail({
-			url: URL,
-			method: Settings.method,
-			mimetype: Settings.mimetype,
-			query: Settings.query,
-			auth: Settings.auth,
-			overrideMimeType: Settings.overrideMimeType
-		}, {
-			4: function(rT, rX) {
-				if(Ship.Timeout) return;
-				clearTimeout(Ship.TimeoutTimer);
-				if(Ship.XHR.status == 200 || Ship.XHR.status == 0) {
-					Settings.onsuccess(rT, rX);
-				} else {
-					Settings.onfailed("sML.AJAX.get Failed: (" + Ship.XHR.status + ") " + URL);
-				}
+		if(Settings.Async !== false) Settings.Async = true;
+		Settings.Method = (Settings.Method && /^POST$/i.test(Settings.Method)) ? "POST" : "GET";
+		var QueryString = "";
+		if(Settings.Query) for(var Q in Settings.Query) QueryString += "&" + Q + "=" + encodeURIComponent(Settings.Query[Q]);
+		if(QueryString) {
+			if(Settings.method == "GET") {
+				Settings.URI = Settings.URI + ((Settings.URI.indexOf("?") > 0) ? QueryString : QueryString.replace(/^&/, "?"));
+				QueryString = null;
+			} else if(Settings.Method == "POST") {
+				QueryString = QueryString.replace(/^&/, "");
 			}
-		});
+		}
+		XHR.sMLAjaxTimeout = 0, XHR.sMLAjaxTimeoutTimer = setTimeout(function() { XHR.sMLAjaxTimeout = 1; Settings.ontimeout("sML.AJAX.get Timeout: " + Settings.URI); }, 10000);
+		Settings.onstate4 = function(rT, rX) {
+			if(XHR.sMLAjaxTimeout) return;
+			clearTimeout(XHR.sMLAjaxTimeoutTimer);
+			if(XHR.status == 200 || XHR.status == 0) Settings.onsuccess(rT, rX);
+			else                                     Settings.onfailed("sML.AJAX.get Failed: (" + XHR.status + ") " + URL);
+			delete XHR;
+		}
+		XHR.onreadystatechange = function() {
+			switch(this.readyState) {
+			//	case 1: if(Settings.onstate1) return Settings.onstate1.call(this, this.responseText, this.responseXML); break; // loading
+			//	case 2: if(Settings.onstate2) return Settings.onstate2.call(this, this.responseText, this.responseXML); break; // loaded
+			//	case 3: if(Settings.onstate3) return Settings.onstate3.call(this, this.responseText, this.responseXML); break; // interactive
+				case 4:                       return Settings.onstate4.call(this, this.responseText, this.responseXML); break; // complete
+			}
+		}
+		if(Settings.MimeType) XHR.overrideMimeType(Settings.MimeType);
+		XHR.open(Settings.Method, Settings.URI, Settings.Async, Settings.Auth[0], Settings.Auth[1]);
+		if(Settings.Method == "POST") XHR.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+		XHR.send(QueryString);
+		return XHR;
 	}
 };
-sML.ajax = function(URL, Settings) { return sML.Ajax.open(URL, Settings); };
+sML.ajax = function() {
+	var Settings = {};
+	if(typeof arguments[0] == "object") {
+		Settings = arguments[0];
+		if(typeof Settings.URI != "string") return false;
+	} else if(typeof arguments[0] == "string") {
+		if(typeof arguments[1] == "object") Settings = arguments[1];
+		Settings.URI = arguments[0];
+	} else return false;
+	if(typeof Settings.onsuccess != "function") {
+		if(typeof arguments[1] == "function") Settings.onsuccess = arguments[1]; else return false;
+		if(typeof arguments[2] == "function") Settings.onfailed  = arguments[2];
+		if(typeof arguments[3] == "function") Settings.ontimeout = arguments[3];
+	}
+	return sML.Ajax.open(Settings);
+};
 
 
 
@@ -1152,10 +1159,10 @@ sML.Math = {
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 sML.String = {
-	padZero: function(N, D) {
-		if((N + "").length >= D) return N;
-		var Padding = "0";
-		while(Padding.length < D) Padding += "0";
+	pad: function(N, D, P) {
+		N = N + ""; if((N).length >= D) return N;
+		if(typeof P != "string") P = "0";
+		var Padding = ""; while(Padding.length < D) Padding += P;
 		return (Padding + N).slice(-D);
 	},
 	insertZeroWidthSpace: function(T) {
@@ -1180,7 +1187,7 @@ sML.getLength = function(O) {
 	return null;
 };
 
-sML.padZero = sML.zeroPadding = sML.String.padZero;
+sML.padZero = sML.zeroPadding = sML.String.padZero = sML.String.pad;
 sML.insertZeroWidthSpace = sML.String.insertZeroWidthSpace;
 
 
@@ -1278,7 +1285,7 @@ sML.find   = function(SearchText, TargetNode) { return sML.Selection.selectRange
 
 sML.fullScreenEnabled = function(D) {
 	if(!D) D = document;
-	return ((D.body.requestFullScreen || D.body.webkitRequestFullScreen || D.body.mozRequestFullScreen || D.body.msRequestFullScreen || D.body.oRequestFullScreen) ? true : false);
+	return ((D.body.requestFullScreen || D.body.webkitRequestFullScreen || D.body.mozRequestFullScreen || D.body.msRequestFullscreen || D.body.oRequestFullScreen) ? true : false);
 };
 
 sML.requestFullScreen = function(E) {
@@ -1286,21 +1293,16 @@ sML.requestFullScreen = function(E) {
 	if(E.requestFullScreen)       return E.requestFullScreen();
 	if(E.webkitRequestFullScreen) return E.webkitRequestFullScreen();
 	if(E.mozRequestFullScreen)    return E.mozRequestFullScreen();
-	if(E.msRequestFullScreen)     return E.msRequestFullScreen();
+	if(E.msRequestFullscreen)     return E.msRequestFullscreen();
 	if(E.oRequestFullScreen)      return E.oRequestFullScreen();
 };
 
 sML.exitFullScreen = function(D) {
 	if(!D) D = document;
-	if(D.exitFullScreen)          return D.exitFullScreen();
 	if(D.cencelFullScreen)        return D.cancelFullScreen();
-	if(D.webkitExitFullScreen)    return D.webkitExitFullScreen();
 	if(D.webkitCancelFullScreen)  return D.webkitCancelFullScreen();
-	if(D.mozExitFullScreen)       return D.mozExitFullScreen();
 	if(D.mozCancelFullScreen)     return D.mozCancelFullScreen();
-	if(D.msExitFullScreen)        return D.msExitFullScreen();
-	if(D.msCancelFullScreen)      return D.msCancelFullScreen();
-	if(D.oExitFullScreen)         return D.oExitFullScreen();
+	if(D.msExitFullscreen)        return D.msExitFullscreen();
 	if(D.oCancelFullScreen)       return D.oCancelFullScreen();
 };
 
