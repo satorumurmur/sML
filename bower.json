@@ -1,0 +1,26 @@
+{
+	"name": "sML",
+	"version": "0.999.8",
+	"authors": [
+		"Satoru MATSUSHIMA"
+	],
+	"description": "I'm a Simple & Middling Library.",
+	"keywords": [
+		"JavaScript",
+		"Interaction"
+	],
+	"license": "MIT",
+	"homepage": "http://sarasa.la/sML",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/satorumurmur/sML.git"
+	},
+	"main": "sML.js",
+	"ignore": [
+		"**/.*",
+		"node_modules",
+		"bower_components",
+		"test",
+		"tests"
+	]
+}
