@@ -10,8 +10,8 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- * - Tue January 6 21:18:00 2015 +0900
- */ sML = (function() { var Version = "0.999.10", Build = 20150106.0;
+ * - Wed February 4 23:05:00 2015 +0900
+ */ sML = (function() { var Version = "0.999.11", Build = 20150204.0;
 
 
 
@@ -75,7 +75,7 @@ if(!sML.UA.Opera) sML.UA.Opera = ((nUA.indexOf("Opera/") > -1) ? v2n(nUA, /^.+Ve
 sML.Environments = sML.Env = (function(Environments, Softwares) {
 	for(var S in Softwares) for(var E in Softwares[S]) if(Softwares[S][E]) Environments.push(E);
 	return Environments;
-})([sML.DN], [sML.OS, sML.UA]);
+})([sML.DeviceName], [sML.OS, sML.UA]);
 
 try {
 	sML.UA.Flash = parseFloat(navigator.mimeTypes['application/x-shockwave-flash'].enabledPlugin.description.replace(/^.+?([\d\.]+).*$/, "$1"));
@@ -415,7 +415,7 @@ sML.hatch = function() {
 		for(var i = 0, L = Egg.childNodes.length; i < L; i++) Chick.appendChild(Egg.firstChild);
 	}
 	if(sML.UA.InternetExplorer < 9) {
-		document.body.appendChild(Egg).display = "none";
+		document.body.appendChild(Egg).style.display = "none";
 		brood();
 		document.body.removeChild(Egg);
 	} else brood();
@@ -597,7 +597,7 @@ sML.Transition = sML.T = {
 		var SFO = this.getSFO(E);
 		if(SFO.Timer) clearTimeout(SFO.Timer);
 		SFO.Param = { // Params
-			c:                   0 , // "C"urrent Frame (auto)
+			c:                         0 , // "C"urrent Frame (auto)
 			f: (Param.f ? Param.f :   10), // "F"rames
 			t: (Param.t ? Param.t :   10), // "T"ime/Frames (milli-seconds)
 			e: (Param.e ? Param.e : null), // "E"asing (default)
@@ -1202,11 +1202,11 @@ sML.String = {
 
 sML.getLength = function(O) {
 	if(typeof O == "object") {
+		if(O instanceof Array) return O.length;
 		var L = 0;
 		for(var i in O) L++;
 		return L;
 	}
-	if(typeof O == "array" ) return        O.length;
 	if(typeof O == "string") return        O.length;
 	if(typeof O == "number") return ("" + O).length;
 	return null;
@@ -1311,24 +1311,24 @@ sML.find   = function(SearchText, TargetNode) { return sML.Selection.selectRange
 sML.Fullscreen = {
 	request: (function(E) {
 		var getFunction = function(M) { return function(O) { if(!O) O = E; return O[M](); } };
-		if(E.requestFullscreen)       return getFunction("requestFullscreen");
-		if(E.requestFullScreen)       return getFunction("requestFullScreen");
-		if(E.webkitRequestFullscreen) return getFunction("webkitRequestFullscreen");
-		if(E.webkitRequestFullScreen) return getFunction("webkitRequestFullScreen");
-		if(E.mozRequestFullscreen)    return getFunction("mozRequestFullscreen");
-		if(E.mozRequestFullScreen)    return getFunction("mozRequestFullScreen");
-		if(E.msRequestFullscreen)     return getFunction("msRequestFullscreen");
+		if(E.requestFullscreen)                             return getFunction("requestFullscreen");
+		if(E.requestFullScreen)                             return getFunction("requestFullScreen");
+		if(E.webkitRequestFullscreen)                       return getFunction("webkitRequestFullscreen");
+		if(E.webkitRequestFullScreen)                       return getFunction("webkitRequestFullScreen");
+		if(E.mozRequestFullscreen)                          return getFunction("mozRequestFullscreen");
+		if(E.mozRequestFullScreen)                          return getFunction("mozRequestFullScreen");
+		if(E.msRequestFullscreen)                           return getFunction("msRequestFullscreen");
 		return function() { return false; };
 	})(document.documentElement),
 	exit: (function(D) {
 		var getFunction = function(M) { return function(O) { if(!O) O = D; return O[M](); } };
-		if(D.exitFullscreen)         return getFunction("exitFullscreen");
-		if(D.cencelFullScreen)       return getFunction("cencelFullScreen");
-		if(D.webkitExitFullscreen)   return getFunction("webkitExitFullscreen");
-		if(D.webkitCancelFullScreen) return getFunction("webkitCancelFullScreen");
-		if(D.mozExitFullscreen)      return getFunction("mozExitFullscreen");
-		if(D.mozRequestFullScreen)   return getFunction("mozRequestFullScreen");
-		if(D.msExitFullscreen)       return getFunction("msExitFullscreen");
+		if(D.exitFullscreen)                                return getFunction("exitFullscreen");
+		if(D.cencelFullScreen)                              return getFunction("cencelFullScreen");
+		if(D.webkitExitFullscreen)                          return getFunction("webkitExitFullscreen");
+		if(D.webkitCancelFullScreen)                        return getFunction("webkitCancelFullScreen");
+		if(D.mozExitFullscreen)                             return getFunction("mozExitFullscreen");
+		if(D.mozRequestFullScreen)                          return getFunction("mozRequestFullScreen");
+		if(D.msExitFullscreen)                              return getFunction("msExitFullscreen");
 		return function() { return false; };
 	})(document),
 	getElement: (function(D) {
