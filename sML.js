@@ -93,7 +93,7 @@ sML.UA.Fl = sML.UA.Flash;
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-sML.log = function() { try { return console.log.apply(window, arguments); } catch(e) {} };
+sML.log = function() { try { return console.log.apply(console, arguments); } catch(e) {} };
 
 sML.write = function() {
 	document.open();
