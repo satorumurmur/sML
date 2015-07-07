@@ -199,6 +199,16 @@ sML.extendElements = sML.Fill.extendElements;
 
 window.requestAnimationFrame = sML.Fill.carePrefix(window, "requestAnimationFrame") || function(F) { setTimeout(F, 1000/60); };
 
+if(!window.CustomEvent || (typeof window.CustomEvent !== "function") && (window.CustomEvent.toString().indexOf('CustomEventConstructor') === -1)) {
+	window.CustomEvent = function(EventName, Option) {
+		Option = Option || { bubbles: false, cancelable: false, detail: undefined };
+		var Eve = document.createEvent("CustomEvent");
+		Eve.initCustomEvent(EventName, Option.bubbles, Option.cancelable, Option.detail);
+		return Eve;
+	};
+	window.CustomEvent.prototype = window.Event.prototype;
+}
+
 
 
 
