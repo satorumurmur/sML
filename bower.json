@@ -1,6 +1,6 @@
 {
 	"name": "sML",
-	"version": "0.999.8",
+	"version": "0.999.24",
 	"authors": [
 		"Satoru MATSUSHIMA"
 	],
@@ -16,11 +16,5 @@
 		"url": "git://github.com/satorumurmur/sML.git"
 	},
 	"main": "/sML.js",
-	"ignore": [
-		"**/.*",
-		"node_modules",
-		"bower_components",
-		"test",
-		"tests"
-	]
+	"ignore": []
 }
