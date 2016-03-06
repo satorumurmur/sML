@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.25", Build = 20160228.2300;
+ */ sML = (function() { var Version = "0.999.26", Build = 20160306.2055;
 
 
 
@@ -138,90 +138,89 @@ if(!window.CustomEvent || (typeof window.CustomEvent !== "function") && (window.
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 sML.Event = {
-    set: function(Obj, ELs) { for(var EN in ELs) Obj.addEventListener(EN, ELs[EN], false); }
-};
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-sML.Event.OnResizeFont = sML.onResizeFont = sML.onresizefont = {
-    RegularFunctions: [],
-    onZoomInFunctions: [],
-    onZoomOutFunctions: [],
-    addEventListener: function(F, S) {
-             if(S && S > 0) this.onZoomInFunctions.push(F);
-        else if(S && S < 0) this.onZoomOutFunctions.push(F);
-        else                this.RegularFunctions.push(F);
-    },
-    detect: function(Ele, Tim) {
-        if(!Ele) var Ele = document.body;
-        if(!Tim) var Tim = 200;
-        this.checker = Ele;
-        this.timer = setInterval(function() {
-            var currentHeight = sML.Coord.getElementSize(sML.onResizeFont.checker).h;
-            if(sML.onResizeFont.prevHeight && sML.onResizeFont.prevHeight != currentHeight) {
-                var Functions = sML.onResizeFont.RegularFunctions;
-                if(sML.onResizeFont.prevHeight && sML.onResizeFont.prevHeight < currentHeight) {
-                    Functions = Functions.concat(sML.onResizeFont.onZoomInFunctions);
-                } else if(sML.onResizeFont.prevHeight && sML.onResizeFont.prevHeight > currentHeight) {
-                    Functions = Functions.concat(sML.onResizeFont.onZoomOutFunctions);
+    add:    function(Obj, ELs) { for(var EN in ELs)    Obj.addEventListener(EN, ELs[EN], false); return Obj; },
+    remove: function(Obj, ELs) { for(var EN in ELs) Obj.removeEventListener(EN, ELs[EN]);        return Obj; },
+    observeTouch: function(Ele, Opt) {
+        /*! Requires Hammer.js - http://hammerjs.github.io/ - Copyright (c) Jorik Tangelder - Licensed under the MIT license. */
+        if(Ele.TouchEventObserver) return Ele;
+        if(!window.Hammer) return sML.edit(Ele, { addTouchEventListener: function() { return false; }, removeTouchEventListener: function() { return false; } });
+        var HM = new Hammer.Manager(Ele);
+        if(!Opt || Opt.Pan)       HM.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
+        if(!Opt || Opt.Swipe)     HM.add(new Hammer.Swipe()).recognizeWith(HM.get('pan'));
+        if(!Opt || Opt.Rotate)    HM.add(new Hammer.Rotate({ threshold: 0 })).recognizeWith(HM.get('pan'));
+        if(!Opt || Opt.Pinch)     HM.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([HM.get('pan'), HM.get('rotate')]);
+        if(!Opt || Opt.DoubleTap) HM.add(new Hammer.Tap({ event: 'doubletap', taps: 2 }));
+        if(!Opt || Opt.Tap)       HM.add(new Hammer.Tap());
+        return sML.edit(Ele, {
+            TouchEventObserver: HM,
+            TouchEventHandlers: [],
+            addTouchEventListener: function(EveName, EveListener) {
+                var Wrapper = function(TEve) { EveListener.apply(Ele, [TEve.srcEvent, TEve]); };
+                Ele.TouchEventHandlers.push([EveListener, Wrapper]);
+                Ele.TouchEventObserver.on(EveName, Wrapper);
+                return Ele;
+            },
+            removeTouchEventListener: function(EveName, EveListener) {
+                if(!EveListener || typeof EveListener != "function") Ele.TouchEventObserver.off(EveName);
+                else {
+                    var TouchEventHandlers = [];
+                    for(var i = 0, L = Ele.TouchEventHandlers.length; i < L; i++) {
+                        if(Ele.TouchEventHandlers[i][0] == EveListener) Ele.TouchEventObserver.off(EveName, Ele.TouchEventHandlers[i][1]);
+                        else TouchEventHandlers.push(Ele.TouchEventHandlers[i]);
+                    }
+                    Ele.TouchEventHandlers = TouchEventHandlers;
                 }
-                for(var i = 0, L = Functions.length; i < L; i++) Functions[i]();
+                return Ele;
             }
-            sML.onResizeFont.prevHeight = currentHeight;
-        }, Tim);
+        });
     },
-    stopDetect: function() {
-        if(this.timer) clearTimeout(this.timer);
+    unobserveTouch: function(Ele) {
+        /*! Requires Hammer.js - http://hammerjs.github.io/ - Copyright (c) Jorik Tangelder - Licensed under the MIT license. */
+        if(!Ele.TouchEventObserver) return Ele;
+        Ele.TouchEventObserver.destroy();
+        delete(Ele.TouchEventObserver);
+        delete(Ele.TouchEventHandlers);
+        delete(Ele.addTouchEventListener);
+        delete(Ele.removeTouchEventListener);
+        return Ele;
+    },
+    OnResizeFont: {
+        RegularFunctions: [],
+        onZoomInFunctions: [],
+        onZoomOutFunctions: [],
+        addEventListener: function(F, S) {
+                 if(S && S > 0) this.onZoomInFunctions.push(F);
+            else if(S && S < 0) this.onZoomOutFunctions.push(F);
+            else                this.RegularFunctions.push(F);
+        },
+        detect: function(Ele, Tim) {
+            if(!Ele) var Ele = document.body;
+            if(!Tim) var Tim = 200;
+            this.checker = Ele;
+            this.timer = setInterval(function() {
+                var currentHeight = sML.Coord.getElementSize(sML.onResizeFont.checker).h;
+                if(sML.onResizeFont.prevHeight && sML.onResizeFont.prevHeight != currentHeight) {
+                    var Functions = sML.onResizeFont.RegularFunctions;
+                    if(sML.onResizeFont.prevHeight && sML.onResizeFont.prevHeight < currentHeight) {
+                        Functions = Functions.concat(sML.onResizeFont.onZoomInFunctions);
+                    } else if(sML.onResizeFont.prevHeight && sML.onResizeFont.prevHeight > currentHeight) {
+                        Functions = Functions.concat(sML.onResizeFont.onZoomOutFunctions);
+                    }
+                    for(var i = 0, L = Functions.length; i < L; i++) Functions[i]();
+                }
+                sML.onResizeFont.prevHeight = currentHeight;
+            }, Tim);
+        },
+        stopDetect: function() {
+            if(this.timer) clearTimeout(this.timer);
+        }
     }
 };
 
-//----------------------------------------------------------------------------------------------------------------------------------------------
-
-sML.addTouchEventObserver = sML.observeTouch = function(Ele, Opt) {
-    /*! Requires Hammer.js - http://hammerjs.github.io/ - Copyright (c) Jorik Tangelder - Licensed under the MIT license. */
-    if(Ele.TouchEventObserver) return Ele;
-    if(!window.Hammer) return sML.edit(Ele, { addTouchEventListener: function() { return false; }, removeTouchEventListener: function() { return false; } });
-    var HM = new Hammer.Manager(Ele);
-    if(!Opt || Opt.Pan)       HM.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
-    if(!Opt || Opt.Swipe)     HM.add(new Hammer.Swipe()).recognizeWith(HM.get('pan'));
-    if(!Opt || Opt.Rotate)    HM.add(new Hammer.Rotate({ threshold: 0 })).recognizeWith(HM.get('pan'));
-    if(!Opt || Opt.Pinch)     HM.add(new Hammer.Pinch({ threshold: 0 })).recognizeWith([HM.get('pan'), HM.get('rotate')]);
-    if(!Opt || Opt.DoubleTap) HM.add(new Hammer.Tap({ event: 'doubletap', taps: 2 }));
-    if(!Opt || Opt.Tap)       HM.add(new Hammer.Tap());
-    return sML.edit(Ele, {
-        TouchEventObserver: HM,
-        TouchEventHandlers: [],
-        addTouchEventListener: function(EveName, EveListener) {
-            var Wrapper = function(TEve) { EveListener.apply(Ele, [TEve.srcEvent, TEve]); };
-            Ele.TouchEventHandlers.push([EveListener, Wrapper]);
-            Ele.TouchEventObserver.on(EveName, Wrapper);
-            return Ele;
-        },
-        removeTouchEventListener: function(EveName, EveListener) {
-            if(!EveListener || typeof EveListener != "function") Ele.TouchEventObserver.off(EveName);
-            else {
-                var TouchEventHandlers = [];
-                for(var i = 0, L = Ele.TouchEventHandlers.length; i < L; i++) {
-                    if(Ele.TouchEventHandlers[i][0] == EveListener) Ele.TouchEventObserver.off(EveName, Ele.TouchEventHandlers[i][1]);
-                    else TouchEventHandlers.push(Ele.TouchEventHandlers[i]);
-                }
-                Ele.TouchEventHandlers = TouchEventHandlers;
-            }
-            return Ele;
-        }
-    });
-};
-
-sML.removeTouchEventObserver = function(Ele) {
-    /*! Requires Hammer.js - http://hammerjs.github.io/ - Copyright (c) Jorik Tangelder - Licensed under the MIT license. */
-    if(!Ele.TouchEventObserver) return Ele;
-    Ele.TouchEventObserver.destroy();
-    delete(Ele.TouchEventObserver);
-    delete(Ele.TouchEventHandlers);
-    delete(Ele.addTouchEventListener);
-    delete(Ele.removeTouchEventListener);
-    return Ele;
-};
+sML.addEventListener = sML.Event.add;
+sML.removeEventListener = sML.Event.remove;
+sML.observeTouch = sML.Event.observeTouch;
+sML.unobserveTouch = sML.Event.observeTouch;
 
 
 
@@ -279,35 +278,20 @@ sML.draw = sML.Drawer.draw;
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-sML.getElements = sML.getElementsBySelector = function() {
-    for(var i = 1, L = arguments.length; i < L; i++) arguments[0] += "," + arguments[i];
-    return document.querySelectorAll(arguments[0]);
-};
-
-sML.cloneObject = function(Obj) {
-    var Fun = function() {};
-    Fun.prototype = Obj;
-    return new Fun();
-};
-
-sML.set = sML.edit = function(Obj, Pros, Stys, ELs) {
-    if(Pros) {
-        if(Pros["ObserveTouch"]) {
-            sML.addTouchEventObserver(Obj);
-            delete Pros["ObserveTouch"];
-        }
-        for(var Pro in Pros) {
-            if(/^data-/.test(Pro)) Obj.setAttribute(Pro, Pros[Pro]);
-            else                   Obj[Pro] = Pros[Pro];
-        }
+sML.set = sML.edit = function(Obj, Pros, Sty) {
+    for(var Pro in Pros) {
+        if(Pro == "on" || Pro == "extraHTML") continue;
+        if(/^data-/.test(Pro)) Obj.setAttribute(Pro, Pros[Pro]);
+        else                   Obj[Pro] = Pros[Pro];
     }
-    if(Stys) sML.CSS.set(Obj, Stys);
-    if(ELs) sML.Event.set(Obj, ELs);
+    if(Pros.extraHTML) Obj.innerHTML = Obj.innerHTML + Pros.extraHTML;
+    if(Pros.on) sML.Event.add(Obj, Pros.on);
+    if(Sty) sML.CSS.set(Obj, Sty)
     return Obj;
 };
 
-sML.create = function(TN, Pros, Stys, Eves) {
-    return sML.set(document.createElement(TN), Pros, Stys, Eves);
+sML.create = function(TN, Pros, Sty) {
+    return sML.set(document.createElement(TN), Pros, Sty);
 };
 
 sML.changeClass = sML.changeClassName = function(Ele, CN) {
@@ -318,7 +302,7 @@ sML.changeClass = sML.changeClassName = function(Ele, CN) {
 
 sML.addClass = sML.addClassName = function(Ele, CN) {
     if(typeof CN != "string") return Ele.className;
-    CN = CN.replace(/ +/g, " ").replace(/^ /, "").replace(/ $/, "")
+    CN = CN.trim().replace(/ +/g, " ");
     if(!CN) return Ele.className;
     if(Ele.className) {
         if((" " + Ele.className + " ").indexOf(" " + CN + " ") > -1) return Ele.className;
@@ -330,40 +314,22 @@ sML.addClass = sML.addClassName = function(Ele, CN) {
 sML.removeClass = sML.removeClassName = function(Ele, CN) {
     if(!Ele.className) return "";
     if(typeof CN != "string") return Ele.className;
-    CN = CN.replace(/ +/g, " ").replace(/^ /, "").replace(/ $/, "")
+    CN = CN.trim().replace(/ +/g, " ");
     if(!CN) return Ele.className;
     if((" " + Ele.className + " ").indexOf(" " + CN + " ") <  0) return Ele.className;
-    CN = (" " + Ele.className + " ").replace(" " + CN + " ", " ").replace(/ +/g, " ").replace(/^ /, "").replace(/ $/, "");
+    CN = (" " + Ele.className + " ").replace(" " + CN + " ", " ").trim().replace(/ +/g, " ");
     return sML.changeClass(Ele, CN);
 };
 
 sML.replaceClass = sML.replaceClassName = function(Ele, RCN, ACN) {
-    sML.removeClass(Ele, RCN);
-    sML.addClass(Ele, ACN);
-    return Ele.className;
+        sML.removeClass(Ele, RCN);
+    return sML.addClass(Ele, ACN);
 };
 
-sML.appendChildren = function(Eles, Par) {
-    if(!Eles.length) Par.appendChild(Eles);
-    else for(var i = 0, L = Eles.length; i < L; i++) Par.appendChild(Eles[i]);
+sML.appendChildren = function(Par, Eles) {
+    if(!Eles.length) Eles = [Eles];
+    for(var i = 0, L = Eles.length; i < L; i++) Par.appendChild(Eles[i]);
     return Eles;
-};
-
-sML.insertBefore = function(Ele, Sib) {
-    Sib.parentNode.insertBefore(Ele, Sib);
-    return Sib.previousSibling;
-};
-
-sML.insertAfter = function(Ele, Sib) {
-    Sib.parentNode.insertBefore(Ele, Sib.nextSibling);
-    return Sib.nextSibling;
-};
-
-sML.replaceElement = function(Ele, REle) {
-    REle.parentNode.insertBefore(Ele, S);
-    Ele = REle.previousSibling;
-    REle.parentNode.removeChild(REle);
-    return Ele;
 };
 
 sML.deleteElement = function(Ele) {
@@ -378,6 +344,12 @@ sML.hatch = function() {
     Egg.innerHTML = HTML;
     for(var i = 0, L = Egg.childNodes.length; i < L; i++) Chick.appendChild(Egg.firstChild);
     return Chick;
+};
+
+sML.cloneObject = function(Obj) {
+    var Fun = function() {};
+    Fun.prototype = Obj;
+    return new Fun();
 };
 
 
@@ -487,7 +459,8 @@ sML.CSS = {
 };
 
 sML.style = sML.css = function(E, PV, Cb) { return sML.CSS.set(E, PV, Cb); };
-
+sML.appendStyleRule = sML.appendCSSRule = function(Sel, Sty, PD) { return sML.CSS.appendRule(Sel, Sty, PD); };
+sML.deleteStyleRule = sML.deleteCSSRule = function(Ind, PD) { return sML.CSS.deleteRule(Ind, PD); };
 
 
 
