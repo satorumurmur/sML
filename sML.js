@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.26", Build = 20160306.2055;
+ */ sML = (function() { var Version = "0.999.27", Build = 20160310.0031;
 
 
 
@@ -220,7 +220,7 @@ sML.Event = {
 sML.addEventListener = sML.Event.add;
 sML.removeEventListener = sML.Event.remove;
 sML.observeTouch = sML.Event.observeTouch;
-sML.unobserveTouch = sML.Event.observeTouch;
+sML.unobserveTouch = sML.Event.unobserveTouch;
 
 
 
@@ -962,9 +962,9 @@ sML.Math = {
 
 sML.String = {
     pad: function(Nat, Pad, Dig) {
-        N = N + "";
+        Nat = Nat + "";
         if(typeof Nat == "number") Nat = Nat + "";
-        if(typeof Pad == "number") P = P + "";
+        if(typeof Pad == "number") Pad = Pad + "";
         if(typeof Nat != "string" || typeof Pad != "string" || typeof Dig != "number" || Dig < 1 || Nat.length >= Dig) return Nat;
         while(Nat.length < Dig) Nat = Pad + Nat;
         return Nat.slice(-Dig);
