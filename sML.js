@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.29", Build = 20160329.2233;
+ */ sML = (function() { var Version = "0.999.30", Build = 201604110422;
 
 
 
@@ -862,10 +862,11 @@ sML.Cookies = {
         CookieValue = encodeURIComponent(CookieValue);
         Opt.Path    = (typeof Opt.Path    == "string") ? Opt.Path    : location.pathname.replace(/[^\/]+$/, "");
         Opt.Expires = (typeof Opt.Expires == "number") ? Opt.Expires : 86400000; // a day
+        var D = new Date();
         document.cookie = [
             CookieName + "=" + CookieValue,
             "path=" + Opt.Path,
-            "expires=" + Date.prototype.toGMTString(Date.prototype.setTime(Date.now() + Opt.Expires))
+            "expires=" + D.toGMTString(D.setTime(D.getTime() + Opt.Expires))
         ].join("; ");
         return document.cookie;
     }
