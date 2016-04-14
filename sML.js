@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.30", Build = 201604110422;
+ */ sML = (function() { var Version = "0.999.31", Build = 201604112133;
 
 
 
@@ -901,6 +901,14 @@ sML.each = function(Obj, Fun, Sta, End) {
     for(var i = (Sta ? Sta : 0), L = (End ? End + 1 : Obj.length); i < L; i++) if(Fun.call(Obj[i], i, Obj) === false) break;
     return Obj;
 };
+
+if(!Array.prototype.includes) {
+    Array.prototype.includes = function(Item) {
+        for(var i = 0, L = this.length; i < L; i++) {
+            if(this[i] == Item) return true;
+        }
+    }
+}
 
 
 
