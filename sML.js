@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.31", Build = 201604112133;
+ */ sML = (function() { var Version = "0.999.32", Build = 201605121800;
 
 
 
@@ -140,6 +140,8 @@ if(!window.CustomEvent || (typeof window.CustomEvent !== "function") && (window.
 sML.Event = {
     add:    function(Obj, ELs) { for(var EN in ELs)    Obj.addEventListener(EN, ELs[EN], false); return Obj; },
     remove: function(Obj, ELs) { for(var EN in ELs) Obj.removeEventListener(EN, ELs[EN]);        return Obj; },
+    preventDefault:  function(Eve) { Eve.preventDefault(); },
+    stopPropagation: function(Eve) { Eve.stopPropagation(); },
     observeTouch: function(Ele, Opt) {
         /*! Requires Hammer.js - http://hammerjs.github.io/ - Copyright (c) Jorik Tangelder - Licensed under the MIT license. */
         if(Ele.TouchEventObserver) return Ele;
@@ -661,13 +663,14 @@ sML.Coord = {
 sML.getCoord = function() { return sML.Coord.getCoord.apply(sML.Coord, arguments); };
 
 sML.Scroller = {
-    scrollTo: function(Obj, Goa, Par, callback) {
-        var SC = sML.Coord.getScrollCoord(Obj);
-        var LC = sML.Coord.getScrollLimitCoord(Obj);
-        if(typeof Goa == "number") Goa = { X: SC.X, Y: Goa }; else if(typeof Goa != "object" || !Goa) return;
+    scrollTo: function(Goa, Par, callback) {
+        if(!Par) Par = {};
+        if(!Par.Frame || Par.Frame instanceof HTMLElement) Par.Frame = window;
+        var SC = sML.Coord.getScrollCoord(Par.Frame);
+        var LC = sML.Coord.getScrollLimitCoord(Par.Frame);
+        if(typeof Goa   == "number") Goa   = { X: SC.X, Y: Goa }; else if(typeof Goa != "object" || !Goa) return;
         if(typeof Goa.X != "number") Goa.X = SC.X;
         if(typeof Goa.Y != "number") Goa.Y = SC.Y;
-        if(!Par) Par = {};
              if(typeof Par.Duration != "number" || Par.Duration < 0) Par.Duration = 100;
         var ease = sML.Easing.linear;
              if(typeof Par.Easing == "function") var ease = Par.Easing;
@@ -677,12 +680,12 @@ sML.Scroller = {
         if(sML.Scroller.Timer) clearTimeout(sML.Scroller.Timer);
         !Par.ForceScroll ? sML.Scroller.addScrollCancelation() : sML.Scroller.preventUserScrolling();
         if(typeof Par.before == "function") Par.before();
-        var scroll = Obj == window ? window.scrollTo : function(X, Y) { Obj.scrollLeft = X; Obj.scrollTop  = Y; };
+        var scrollFunction = (Par.Frame == window) ? window.scrollTo : function(X, Y) { Par.Frame.scrollLeft = X; Par.Frame.scrollTop  = Y; };
         (function(Start, Goa, Par) {
             var Pos = Par.Duration ? ((new Date()).getTime() - Start.Time) / Par.Duration : 1;
             if(Pos < 1) {
                 var Progress = ease(Pos);
-                scroll(
+                scrollFunction(
                     Math.round(Start.X + (Goa.X - Start.X) * Progress),
                     Math.round(Start.Y + (Goa.Y - Start.Y) * Progress)
                 );
@@ -690,7 +693,7 @@ sML.Scroller = {
                 var Next = arguments.callee;
                 sML.Scroller.Timer = setTimeout(function() { Next(Start, Goa, Par); }, 10);
             } else {
-                scroll(Goa.X, Goa.Y);
+                scrollFunction(Goa.X, Goa.Y);
                 if(typeof Par.after    == "function") Par.after();
                 if(typeof Par.callback == "function") Par.callback();
                 if(Par.ForceScroll) sML.Scroller.allowUserScrolling();
@@ -711,16 +714,16 @@ sML.Scroller = {
         document.removeEventListener("DOMMouseScroll", sML.Scroller.cancelScrolling);
     },
     preventUserScrolling: function() {
-           document.addEventListener("mousedown",      sML.preventDefault);
-           document.addEventListener("keydown",        sML.preventDefault);
-           document.addEventListener("mousewheel",     sML.preventDefault);
-           document.addEventListener("DOMMouseScroll", sML.preventDefault);
+           document.addEventListener("mousedown",      sML.Event.preventDefault);
+           document.addEventListener("keydown",        sML.Event.preventDefault);
+           document.addEventListener("mousewheel",     sML.Event.preventDefault);
+           document.addEventListener("DOMMouseScroll", sML.Event.preventDefault);
     },
     allowUserScrolling: function() {
-        document.removeEventListener("mousedown",      sML.preventDefault);
-        document.removeEventListener("keydown",        sML.preventDefault);
-        document.removeEventListener("mousewheel",     sML.preventDefault);
-        document.removeEventListener("DOMMouseScroll", sML.preventDefault);
+        document.removeEventListener("mousedown",      sML.Event.preventDefault);
+        document.removeEventListener("keydown",        sML.Event.preventDefault);
+        document.removeEventListener("mousewheel",     sML.Event.preventDefault);
+        document.removeEventListener("DOMMouseScroll", sML.Event.preventDefault);
     }
 };
 
