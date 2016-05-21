@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.33", Build = 201605220148;
+ */ sML = (function() { var Version = "0.999.34", Build = 201605220307;
 
 
 
@@ -663,42 +663,39 @@ sML.Coord = {
 sML.getCoord = function() { return sML.Coord.getCoord.apply(sML.Coord, arguments); };
 
 sML.Scroller = {
-    scrollTo: function(Goa, Par, callback) {
-        if(!Par) Par = {};
+    scrollTo: function(Par) {
+        if(!Par || typeof Par != "object") return;
         if(!Par.Frame || !(Par.Frame instanceof HTMLElement)) Par.Frame = window;
         var SC = sML.Coord.getScrollCoord(Par.Frame);
-        var LC = sML.Coord.getScrollLimitCoord(Par.Frame);
-        if(typeof Goa   == "number") Goa   = { X: SC.X, Y: Goa }; else if(typeof Goa != "object" || !Goa) return;
-        if(typeof Goa.X != "number") Goa.X = SC.X;
-        if(typeof Goa.Y != "number") Goa.Y = SC.Y;
-             if(typeof Par.Duration != "number" || Par.Duration < 0) Par.Duration = 100;
+        if(typeof Par.X != "number") Par.X = SC.X;
+        if(typeof Par.Y != "number") Par.Y = SC.Y;
+         if(typeof Par.Duration != "number" || Par.Duration < 0) Par.Duration = 100;
         var ease = sML.Easing.linear;
              if(typeof Par.Easing == "function") var ease = Par.Easing;
         else if(typeof Par.Easing == "string")   var ease = sML.Easing[Par.Easing] ? sML.Easing[Par.Easing] : sML.Easing.linear;
         else if(typeof Par.Easing == "number")   var ease = sML.Easing.getEaser(Par.Easing);
-             if(typeof callback   == "function") Par.callback = callback;
         if(sML.Scroller.Timer) clearTimeout(sML.Scroller.Timer);
         !Par.ForceScroll ? sML.Scroller.addScrollCancelation() : sML.Scroller.preventUserScrolling();
         if(typeof Par.before == "function") Par.before();
         var scrollFunction = (Par.Frame == window) ? window.scrollTo : function(X, Y) { Par.Frame.scrollLeft = X; Par.Frame.scrollTop  = Y; };
-        (function(Start, Goa, Par) {
+        (function(Start, Par) {
             var Pos = Par.Duration ? ((new Date()).getTime() - Start.Time) / Par.Duration : 1;
             if(Pos < 1) {
                 var Progress = ease(Pos);
                 scrollFunction(
-                    Math.round(Start.X + (Goa.X - Start.X) * Progress),
-                    Math.round(Start.Y + (Goa.Y - Start.Y) * Progress)
+                    Math.round(Start.X + (Par.X - Start.X) * Progress),
+                    Math.round(Start.Y + (Par.Y - Start.Y) * Progress)
                 );
                 if(typeof Par.among == "function") Par.among();
                 var Next = arguments.callee;
-                sML.Scroller.Timer = setTimeout(function() { Next(Start, Goa, Par); }, 10);
+                sML.Scroller.Timer = setTimeout(function() { Next(Start, Par); }, 10);
             } else {
-                scrollFunction(Goa.X, Goa.Y);
+                scrollFunction(Par.X, Par.Y);
                 if(typeof Par.after    == "function") Par.after();
                 if(typeof Par.callback == "function") Par.callback();
                 if(Par.ForceScroll) sML.Scroller.allowUserScrolling();
             }
-        })({ X: SC.X, Y: SC.Y, Time: (new Date()).getTime() }, Goa, Par);
+        })({ X: SC.X, Y: SC.Y, Time: (new Date()).getTime() }, Par);
     },
     addScrollCancelation: function() {
            document.addEventListener("mousedown",      sML.Scroller.cancelScrolling);
