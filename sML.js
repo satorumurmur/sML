@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.32", Build = 201605121800;
+ */ sML = (function() { var Version = "0.999.33", Build = 201605220148;
 
 
 
@@ -665,7 +665,7 @@ sML.getCoord = function() { return sML.Coord.getCoord.apply(sML.Coord, arguments
 sML.Scroller = {
     scrollTo: function(Goa, Par, callback) {
         if(!Par) Par = {};
-        if(!Par.Frame || Par.Frame instanceof HTMLElement) Par.Frame = window;
+        if(!Par.Frame || !(Par.Frame instanceof HTMLElement)) Par.Frame = window;
         var SC = sML.Coord.getScrollCoord(Par.Frame);
         var LC = sML.Coord.getScrollLimitCoord(Par.Frame);
         if(typeof Goa   == "number") Goa   = { X: SC.X, Y: Goa }; else if(typeof Goa != "object" || !Goa) return;
