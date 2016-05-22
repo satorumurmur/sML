@@ -667,10 +667,10 @@ sML.Scroller = {
              if(typeof Tar == "number") Tar = { Y: Tar };
         else if(Tar instanceof HTMLElement) Tar = sML.Coord.getElementCoord(Tar);
         else if(!Tar) return false;
-        var SC = sML.Coord.getScrollCoord(Par.Frame);
+        if(!Tar.Frame || !(Tar.Frame instanceof HTMLElement)) Tar.Frame = window;
+        var SC = sML.Coord.getScrollCoord(Tar.Frame);
         if(typeof Tar.X != "number") Tar.X = SC.X;
         if(typeof Tar.Y != "number") Tar.Y = SC.Y;
-        if(!Tar.Frame || !(Tar.Frame instanceof HTMLElement)) Tar.Frame = window;
         if(!Par) Par = {};
         if(typeof Par.Duration != "number" || Par.Duration < 0) Par.Duration = 100;
         var ease = sML.Easing.linear;
@@ -680,7 +680,7 @@ sML.Scroller = {
         if(sML.Scroller.Timer) clearTimeout(sML.Scroller.Timer);
         !Par.ForceScroll ? sML.Scroller.addScrollCancelation() : sML.Scroller.preventUserScrolling();
         if(typeof Par.before == "function") Par.before();
-        var scrollFunction = (Tar.Frame == window) ? window.scrollTo : function(X, Y) { Tar.Frame.scrollLeft = X; Tar.Frame.scrollTop  = Y; };
+        var scrollFunction = (Tar.Frame == window) ? window.scrollTo : function(X, Y) { Tar.Frame.scrollLeft = X; Tar.Frame.scrollTop = Y; };
         (function(Start, Tar, Par) {
             var Pos = Par.Duration ? ((new Date()).getTime() - Start.Time) / Par.Duration : 1;
             if(Pos < 1) {
