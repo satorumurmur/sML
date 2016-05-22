@@ -665,7 +665,7 @@ sML.getCoord = function() { return sML.Coord.getCoord.apply(sML.Coord, arguments
 sML.Scroller = {
     scrollTo: function(Tar, Par) {
              if(typeof Tar == "number") Tar = { Y: Tar };
-        else if(typeof Tar instanceof HTMLElement) Tar = sML.Coord.getElementCoord(Tar);
+        else if(Tar instanceof HTMLElement) Tar = sML.Coord.getElementCoord(Tar);
         else if(!Tar) return false;
         var SC = sML.Coord.getScrollCoord(Par.Frame);
         if(typeof Tar.X != "number") Tar.X = SC.X;
