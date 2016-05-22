@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.34", Build = 201605220307;
+ */ sML = (function() { var Version = "0.999.35", Build = 201605221607;
 
 
 
@@ -648,7 +648,7 @@ sML.Coord = {
     getCoord_RtL: function(Obj) {
         /**/ if(Obj == screen)   var WH = this.getScreenSize(),                         RT = { X: WH.W, Y: 0 },          LB = { X: 0,           Y:        WH.H };
         else if(Obj == window)   var WH = this.getOffsetSize(document.documentElement), RT = this.getScrollCoord(),      LB = { X: RT.X - WH.W, Y: RT.Y + WH.H };
-        else if(Obj == document) var WH = this.getScrollSize(document.documentElement), RT = { X: 0,    Y: 0 },          LB = { X: WH.W,        Y:        WH.H };
+        else if(Obj == document) var WH = this.getScrollSize(document.documentElement), RT = { X: 0, Y: 0 },               LB = { X: WH.W,        Y:        WH.H };
         else if(Obj.tagName)     var WH = this.getElementSize(Obj),                     RT = this.getElementCoord(Obj, 1), LB = { X: RT.X - WH.W, Y: RT.Y + WH.H };
         else return {};
         return this.getXYTRBLCMWH(
@@ -663,13 +663,16 @@ sML.Coord = {
 sML.getCoord = function() { return sML.Coord.getCoord.apply(sML.Coord, arguments); };
 
 sML.Scroller = {
-    scrollTo: function(Par) {
-        if(!Par || typeof Par != "object") return;
-        if(!Par.Frame || !(Par.Frame instanceof HTMLElement)) Par.Frame = window;
+    scrollTo: function(Tar, Par) {
+             if(typeof Tar == "number") Tar = { Y: Tar };
+        else if(typeof Tar instanceof HTMLElement) Tar = sML.Coord.getElementCoord(Tar);
+        else if(!Tar) return false;
         var SC = sML.Coord.getScrollCoord(Par.Frame);
-        if(typeof Par.X != "number") Par.X = SC.X;
-        if(typeof Par.Y != "number") Par.Y = SC.Y;
-         if(typeof Par.Duration != "number" || Par.Duration < 0) Par.Duration = 100;
+        if(typeof Tar.X != "number") Tar.X = SC.X;
+        if(typeof Tar.Y != "number") Tar.Y = SC.Y;
+        if(!Tar.Frame || !(Tar.Frame instanceof HTMLElement)) Tar.Frame = window;
+        if(!Par) Par = {};
+        if(typeof Par.Duration != "number" || Par.Duration < 0) Par.Duration = 100;
         var ease = sML.Easing.linear;
              if(typeof Par.Easing == "function") var ease = Par.Easing;
         else if(typeof Par.Easing == "string")   var ease = sML.Easing[Par.Easing] ? sML.Easing[Par.Easing] : sML.Easing.linear;
@@ -677,25 +680,25 @@ sML.Scroller = {
         if(sML.Scroller.Timer) clearTimeout(sML.Scroller.Timer);
         !Par.ForceScroll ? sML.Scroller.addScrollCancelation() : sML.Scroller.preventUserScrolling();
         if(typeof Par.before == "function") Par.before();
-        var scrollFunction = (Par.Frame == window) ? window.scrollTo : function(X, Y) { Par.Frame.scrollLeft = X; Par.Frame.scrollTop  = Y; };
-        (function(Start, Par) {
+        var scrollFunction = (Tar.Frame == window) ? window.scrollTo : function(X, Y) { Tar.Frame.scrollLeft = X; Tar.Frame.scrollTop  = Y; };
+        (function(Start, Tar, Par) {
             var Pos = Par.Duration ? ((new Date()).getTime() - Start.Time) / Par.Duration : 1;
             if(Pos < 1) {
                 var Progress = ease(Pos);
                 scrollFunction(
-                    Math.round(Start.X + (Par.X - Start.X) * Progress),
-                    Math.round(Start.Y + (Par.Y - Start.Y) * Progress)
+                    Math.round(Start.X + (Tar.X - Start.X) * Progress),
+                    Math.round(Start.Y + (Tar.Y - Start.Y) * Progress)
                 );
                 if(typeof Par.among == "function") Par.among();
                 var Next = arguments.callee;
-                sML.Scroller.Timer = setTimeout(function() { Next(Start, Par); }, 10);
+                sML.Scroller.Timer = setTimeout(function() { Next(Start, Tar, Par); }, 10);
             } else {
-                scrollFunction(Par.X, Par.Y);
+                scrollFunction(Tar.X, Tar.Y);
                 if(typeof Par.after    == "function") Par.after();
                 if(typeof Par.callback == "function") Par.callback();
                 if(Par.ForceScroll) sML.Scroller.allowUserScrolling();
             }
-        })({ X: SC.X, Y: SC.Y, Time: (new Date()).getTime() }, Par);
+        })({ X: SC.X, Y: SC.Y, Time: (new Date()).getTime() }, Tar, Par);
     },
     addScrollCancelation: function() {
            document.addEventListener("mousedown",      sML.Scroller.cancelScrolling);
