@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.35", Build = 201605221607;
+ */ sML = (function() { var Version = "0.999.37", Build = 201605250103;
 
 
 
