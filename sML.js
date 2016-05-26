@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.37", Build = 201605250103;
+ */ sML = (function() { var Version = "0.999.38", Build = 201605261222;
 
 
 
@@ -143,9 +143,9 @@ sML.Event = {
     preventDefault:  function(Eve) { Eve.preventDefault(); },
     stopPropagation: function(Eve) { Eve.stopPropagation(); },
     observeTouch: function(Ele, Opt) {
-        /*! Requires Hammer.js - http://hammerjs.github.io/ - Copyright (c) Jorik Tangelder - Licensed under the MIT license. */
+        /*! sML.Event.observeTouch requires: "Hammer.js" - http://hammerjs.github.io/ - Copyright (c) Jorik Tangelder - Licensed under the MIT license. */
         if(Ele.TouchEventObserver) return Ele;
-        if(!window.Hammer) return sML.edit(Ele, { addTouchEventListener: function() { return false; }, removeTouchEventListener: function() { return false; } });
+        if(!window.Hammer) return sML.edit(Ele, { addTouchEventListener: function() { return Ele; }, removeTouchEventListener: function() { return Ele; } });
         var HM = new Hammer.Manager(Ele);
         if(!Opt || Opt.Pan)       HM.add(new Hammer.Pan({ threshold: 0, pointers: 0 }));
         if(!Opt || Opt.Swipe)     HM.add(new Hammer.Swipe()).recognizeWith(HM.get('pan'));
@@ -173,18 +173,20 @@ sML.Event = {
                     Ele.TouchEventHandlers = TouchEventHandlers;
                 }
                 return Ele;
+            },
+            removeTouchEventObserver: function() {
+                Ele.TouchEventObserver.destroy();
+                delete(Ele.TouchEventObserver);
+                delete(Ele.TouchEventHandlers);
+                delete(Ele.addTouchEventListener);
+                delete(Ele.removeTouchEventListener);
+                delete(Ele.removeTouchEventObserver);
+                return Ele;
             }
         });
     },
     unobserveTouch: function(Ele) {
-        /*! Requires Hammer.js - http://hammerjs.github.io/ - Copyright (c) Jorik Tangelder - Licensed under the MIT license. */
-        if(!Ele.TouchEventObserver) return Ele;
-        Ele.TouchEventObserver.destroy();
-        delete(Ele.TouchEventObserver);
-        delete(Ele.TouchEventHandlers);
-        delete(Ele.addTouchEventListener);
-        delete(Ele.removeTouchEventListener);
-        return Ele;
+        return (Ele.TouchEventObserver ? Ele.removeTouchEventObserver() : Ele);
     },
     OnResizeFont: {
         RegularFunctions: [],
@@ -636,7 +638,7 @@ sML.Coord = {
         /**/ if(Obj == screen)   var WH = this.getScreenSize(),                         LT = { X: 0,    Y: 0 },          RB = { X: WH.W,        Y:        WH.H };
         else if(Obj == window)   var WH = this.getOffsetSize(document.documentElement), LT = this.getScrollCoord(),      RB = { X: LT.X + WH.W, Y: LT.Y + WH.H };
         else if(Obj == document) var WH = this.getScrollSize(document.documentElement), LT = { X: 0,    Y: 0 },          RB = { X: WH.W,        Y:        WH.H };
-        else if(Obj.tagName)     var WH = this.getOffsetSize(Obj),                      LT = this.getElementCoord(Obj),    RB = { X: LT.X + WH.W, Y: LT.Y + WH.H };
+        else if(Obj.tagName)     var WH = this.getOffsetSize(Obj),                      LT = this.getElementCoord(Obj),  RB = { X: LT.X + WH.W, Y: LT.Y + WH.H };
         else return {};
         return this.getXYTRBLCMWH(
             /*  XY  */ LT.X, LT.Y,
@@ -646,8 +648,8 @@ sML.Coord = {
         );
     },
     getCoord_RtL: function(Obj) {
-        /**/ if(Obj == screen)   var WH = this.getScreenSize(),                         RT = { X: WH.W, Y: 0 },          LB = { X: 0,           Y:        WH.H };
-        else if(Obj == window)   var WH = this.getOffsetSize(document.documentElement), RT = this.getScrollCoord(),      LB = { X: RT.X - WH.W, Y: RT.Y + WH.H };
+        /**/ if(Obj == screen)   var WH = this.getScreenSize(),                         RT = { X: WH.W, Y: 0 },            LB = { X: 0,           Y:        WH.H };
+        else if(Obj == window)   var WH = this.getOffsetSize(document.documentElement), RT = this.getScrollCoord(),        LB = { X: RT.X - WH.W, Y: RT.Y + WH.H };
         else if(Obj == document) var WH = this.getScrollSize(document.documentElement), RT = { X: 0, Y: 0 },               LB = { X: WH.W,        Y:        WH.H };
         else if(Obj.tagName)     var WH = this.getElementSize(Obj),                     RT = this.getElementCoord(Obj, 1), LB = { X: RT.X - WH.W, Y: RT.Y + WH.H };
         else return {};
@@ -696,34 +698,25 @@ sML.Scroller = {
                 scrollFunction(Tar.X, Tar.Y);
                 if(typeof Par.after    == "function") Par.after();
                 if(typeof Par.callback == "function") Par.callback();
-                if(Par.ForceScroll) sML.Scroller.allowUserScrolling();
+                !Par.ForceScroll ? sML.Scroller.cancelScrolling() : sML.Scroller.allowUserScrolling();
             }
         })({ X: SC.X, Y: SC.Y, Time: (new Date()).getTime() }, Tar, Par);
     },
     addScrollCancelation: function() {
-           document.addEventListener("mousedown",      sML.Scroller.cancelScrolling);
-           document.addEventListener("keydown",        sML.Scroller.cancelScrolling);
-           document.addEventListener("mousewheel",     sML.Scroller.cancelScrolling);
-           document.addEventListener("DOMMouseScroll", sML.Scroller.cancelScrolling);
+        ["keydown", "mousedown", "wheel"].forEach(function(EveN) { document.addEventListener(   EveN, sML.Scroller.cancelScrolling); });
     },
     cancelScrolling: function() {
-        //if(sML.Scroller.Timer) clearTimeout(sML.Scroller.Timer);
-        document.removeEventListener("mousedown",      sML.Scroller.cancelScrolling);
-        document.removeEventListener("keydown",        sML.Scroller.cancelScrolling);
-        document.removeEventListener("mousewheel",     sML.Scroller.cancelScrolling);
-        document.removeEventListener("DOMMouseScroll", sML.Scroller.cancelScrolling);
+        clearTimeout(sML.Scroller.Timer);
+        ["keydown", "mousedown", "wheel"].forEach(function(EveN) { document.removeEventListener(EveN, sML.Scroller.cancelScrolling); });
     },
     preventUserScrolling: function() {
-           document.addEventListener("mousedown",      sML.Event.preventDefault);
-           document.addEventListener("keydown",        sML.Event.preventDefault);
-           document.addEventListener("mousewheel",     sML.Event.preventDefault);
-           document.addEventListener("DOMMouseScroll", sML.Event.preventDefault);
+        ["keydown", "mousedown", "wheel"].forEach(function(EveN) { document.addEventListener(   EveN, sML.Scroller.preventDefault ); });
     },
     allowUserScrolling: function() {
-        document.removeEventListener("mousedown",      sML.Event.preventDefault);
-        document.removeEventListener("keydown",        sML.Event.preventDefault);
-        document.removeEventListener("mousewheel",     sML.Event.preventDefault);
-        document.removeEventListener("DOMMouseScroll", sML.Event.preventDefault);
+        ["keydown", "mousedown", "wheel"].forEach(function(EveN) { document.removeEventListener(EveN, sML.Scroller.preventDefault ); });
+    },
+    preventDefault: function(Eve) {
+        return Eve.preventDefault();
     }
 };
 
@@ -886,8 +879,8 @@ sML.Cookies = {
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 sML.JSON = {
-    parse:     function(Str) { try { return JSON.parse(Str);     } catch(e) { return {}; } },
-    stringify: function(Obj) { try { return JSON.stringify(Obj); } catch(e) { return ""; } }
+    parse:     function(Str) { try { return JSON.parse(Str);     } catch(Err) { return {}; } },
+    stringify: function(Obj) { try { return JSON.stringify(Obj); } catch(Err) { return ""; } }
 };
 
 
