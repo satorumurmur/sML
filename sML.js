@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.38", Build = 201605261222;
+ */ sML = (function() { var Version = "0.999.39", Build = 201612142300;
 
 
 
@@ -382,19 +382,26 @@ sML.CSS = {
         return Sty;
     },
     StyleSheets: [],
-    getStyleSheet: function(PD) {
+    getStyleSheet: function(Doc) {
         for(var i = 0, L = this.StyleSheets.length; i < L; i++) {
-            if(this.StyleSheets[i].StyleFor == PD) {
+            if(this.StyleSheets[i].StyleFor == Doc) {
                 return this.StyleSheets[i].StyleSheet;
             }
         }
-        var Sty = PD.createElement("style");
-        Sty.appendChild(PD.createTextNode(""));
-        PD.getElementsByTagName("head")[0].appendChild(Sty);
-        this.StyleSheets.push({ StyleFor: PD, StyleSheet: Sty.sheet });
+        var Sty = Doc.createElement("style");
+        Sty.appendChild(Doc.createTextNode(""));
+        Doc.getElementsByTagName("head")[0].appendChild(Sty);
+        this.StyleSheets.push({ StyleFor: Doc, StyleSheet: Sty.sheet });
         return Sty.sheet;
     },
-    appendRule: function(Sel, Sty, PD) {
+    appendRule: function(Sel, Sty, Doc) {
+        if(!Sel || !Sty) return null;
+        Doc = Doc ? Doc : document;
+        var SS = this.getStyleSheet(Doc);
+        if(!SS) return null;
+        if(typeof Sel.join == "function") { // ["html", "body"]
+            Sel = Sel.join(", ");
+        }
         if(typeof Sty.join == "function") { // ["display: block;", "position: static;"]
             Sty = Sty.join(" ");
         } else if(typeof Sty == "object") { // { display: "block", position: "static" }
@@ -404,12 +411,10 @@ sML.CSS = {
             }
             Sty = TSty.join(" ");
         }
-        var SS = this.getStyleSheet((PD ? PD : document));
-        if(SS) return SS.insertRule(Sel + "{" + Sty + "}", SS.cssRules.length);
-        return null;
+        return SS.insertRule(Sel + "{" + Sty + "}", SS.cssRules.length);
     },
-    deleteRule: function(Ind, PD) {
-        var SS = this.getStyleSheet((PD ? PD : document));
+    deleteRule: function(Ind, Doc) {
+        var SS = this.getStyleSheet(Doc ? Doc : document);
         if(SS) return SS.deleteRule(Ind);
     },
     setProperty: function(Ele, Pro, Val) {
