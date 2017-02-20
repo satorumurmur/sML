@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.39", Build = 201612142300;
+ */ sML = (function() { var Version = "0.999.40", Build = 201702201200;
 
 
 
@@ -670,48 +670,75 @@ sML.Coord = {
 sML.getCoord = function() { return sML.Coord.getCoord.apply(sML.Coord, arguments); };
 
 sML.Scroller = {
-    scrollTo: function(Tar, Par) {
-             if(typeof Tar == "number") Tar = { Y: Tar };
-        else if(Tar instanceof HTMLElement) Tar = sML.Coord.getElementCoord(Tar);
-        else if(!Tar) return false;
-        if(!Tar.Frame || !(Tar.Frame instanceof HTMLElement)) Tar.Frame = window;
-        var SC = sML.Coord.getScrollCoord(Tar.Frame);
-        if(typeof Tar.X != "number") Tar.X = SC.X;
-        if(typeof Tar.Y != "number") Tar.Y = SC.Y;
-        if(!Par) Par = {};
-        if(typeof Par.Duration != "number" || Par.Duration < 0) Par.Duration = 100;
-        var ease = sML.Easing.linear;
-             if(typeof Par.Easing == "function") var ease = Par.Easing;
-        else if(typeof Par.Easing == "string")   var ease = sML.Easing[Par.Easing] ? sML.Easing[Par.Easing] : sML.Easing.linear;
-        else if(typeof Par.Easing == "number")   var ease = sML.Easing.getEaser(Par.Easing);
-        if(sML.Scroller.Timer) clearTimeout(sML.Scroller.Timer);
-        !Par.ForceScroll ? sML.Scroller.addScrollCancelation() : sML.Scroller.preventUserScrolling();
-        if(typeof Par.before == "function") Par.before();
-        var scrollFunction = (Tar.Frame == window) ? window.scrollTo : function(X, Y) { Tar.Frame.scrollLeft = X; Tar.Frame.scrollTop = Y; };
-        (function(Start, Tar, Par) {
-            var Pos = Par.Duration ? ((new Date()).getTime() - Start.Time) / Par.Duration : 1;
-            if(Pos < 1) {
-                var Progress = ease(Pos);
-                scrollFunction(
-                    Math.round(Start.X + (Tar.X - Start.X) * Progress),
-                    Math.round(Start.Y + (Tar.Y - Start.Y) * Progress)
-                );
-                if(typeof Par.among == "function") Par.among();
-                var Next = arguments.callee;
-                sML.Scroller.Timer = setTimeout(function() { Next(Start, Tar, Par); }, 10);
-            } else {
-                scrollFunction(Tar.X, Tar.Y);
-                if(typeof Par.after    == "function") Par.after();
-                if(typeof Par.callback == "function") Par.callback();
-                !Par.ForceScroll ? sML.Scroller.cancelScrolling() : sML.Scroller.allowUserScrolling();
+    distillSetting: function(Tar, Opt) {
+        var Setting = {};
+             if(Tar instanceof HTMLElement) Setting.Target = sML.Coord.getElementCoord(Tar);
+        else if(typeof Tar == "number")     Setting.Target = { X: undefined, Y: Tar   };
+        else if(Tar)                        Setting.Target = { X: Tar.X,     Y: Tar.Y };
+        else                                return false;
+        Setting.Frame = (Tar.Frame && Tar.Frame instanceof HTMLElement) ? Tar.Frame : window;
+        Setting.scrollTo = (Setting.Frame && Setting.Frame instanceof HTMLElement) ? function(X, Y) { Setting.Frame.scrollLeft = X; Setting.Frame.scrollTop = Y; } : window.scrollTo;
+        Setting.Start = sML.Coord.getScrollCoord(Setting.Frame);
+        Setting.Start.Time = (new Date()).getTime();
+        if(typeof Setting.Target.X != "number") Setting.Target.X = Setting.Start.X;
+        if(typeof Setting.Target.Y != "number") Setting.Target.Y = Setting.Start.Y;
+        if(!Opt) Opt = {};
+        Setting.Duration = (typeof Opt.Duration == "number" && Opt.Duration >= 0) ? Opt.Duration : 100;
+        Setting.ease = (function() {
+            switch(typeof Opt.Easing) {
+                case "function": return Opt.Easing;
+                case "string"  : return sML.Easing[Opt.Easing] ? sML.Easing[Opt.Easing] : sML.Easing.linear;
+                case "number"  : return sML.Easing.getEaser(Opt.Easing);
             }
-        })({ X: SC.X, Y: SC.Y, Time: (new Date()).getTime() }, Tar, Par);
+            return sML.Easing.linear;
+        })();
+        Setting.before   = typeof Opt.before   == "function" ? Opt.before   : function() {};
+        Setting.among    = typeof Opt.among    == "function" ? Opt.among    : function() {};
+        Setting.after    = typeof Opt.after    == "function" ? Opt.after    : function() {};
+        Setting.callback = typeof Opt.callback == "function" ? Opt.callback : function() {};
+        Setting.canceled = typeof Opt.canceled == "function" ? Opt.canceled : function() {};
+        Setting.ForceScroll = Opt.ForceScroll;
+        return Setting;
+    },
+    scrollTo: function(Tar, Opt) {
+        this.Setting = this.distillSetting(Tar, Opt);
+        if(!this.Setting) return false;
+        this.scrollTo_begin();
+    },
+    scrollTo_begin: function() {
+        clearTimeout(this.Timer);
+        this.Setting.ForceScroll ? this.preventUserScrolling() : this.addScrollCancelation();
+        this.Setting.before();
+        this.scrollTo_among();
+    },
+    scrollTo_among: function() {
+        var Progress = this.Setting.Duration ? ((new Date()).getTime() - this.Setting.Start.Time) / this.Setting.Duration : 1;
+        if(Progress >= 1) return this.scrollTo_end();
+        Progress = this.Setting.ease(Progress);
+        this.Setting.scrollTo(
+            Math.round(this.Setting.Start.X + (this.Setting.Target.X - this.Setting.Start.X) * Progress),
+            Math.round(this.Setting.Start.Y + (this.Setting.Target.Y - this.Setting.Start.Y) * Progress)
+        );
+        this.Setting.among();
+        this.Timer = setTimeout(function() { sML.Scroller.scrollTo_among(); }, 10);
+    },
+    scrollTo_end: function() {
+        this.Setting.scrollTo(this.Setting.Target.X, this.Setting.Target.Y);
+        this.Setting.after();
+        this.Setting.callback();
+        this.Setting.ForceScroll ? sML.Scroller.allowUserScrolling() : sML.Scroller.removeScrollCancelation();
+        delete(this.Setting);
+    },
+    cancelScrolling: function() {
+        clearTimeout(sML.Scroller.Timer);
+        sML.Scroller.Setting.canceled();
+        delete(sML.Scroller.Setting);
+        sML.Scroller.removeScrollCancelation();
     },
     addScrollCancelation: function() {
         ["keydown", "mousedown", "wheel"].forEach(function(EveN) { document.addEventListener(   EveN, sML.Scroller.cancelScrolling); });
     },
-    cancelScrolling: function() {
-        clearTimeout(sML.Scroller.Timer);
+    removeScrollCancelation: function() {
         ["keydown", "mousedown", "wheel"].forEach(function(EveN) { document.removeEventListener(EveN, sML.Scroller.cancelScrolling); });
     },
     preventUserScrolling: function() {
@@ -725,7 +752,7 @@ sML.Scroller = {
     }
 };
 
-sML.scrollTo = sML.Scroller.scrollTo;
+sML.scrollTo = function() { sML.Scroller.scrollTo.apply(sML.Scroller, arguments); };
 
 
 
