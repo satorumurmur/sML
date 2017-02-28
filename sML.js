@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.41", Build = 201703010147;
+ */ sML = (function() { var Version = "0.999.41", Build = 201703010156;
 
 
 
@@ -37,14 +37,14 @@ var getVersion = function(Prefix) {
 };
 
 sML.OperatingSystem = sML.OS = (function(OS) {
-         if(/(iP(hone|ad|od( touch)?);/.test(nUA)) OS.iOS          = getVersion("CPU (iP(hone|ad|od( touch)?) )?OS");
-    else if(           /OS X 10[\._]\d/.test(nUA)) OS.OSX          = getVersion("OS X 10[\\._]");
-    else if(   /Windows Phone( OS)? \d/.test(nUA)) OS.WindowsPhone = getVersion("Windows Phone OS") || getVersion("Windows Phone");
-    else if(         /Windows( NT)? \d/.test(nUA)) OS.Windows      = getVersion("Windows NT") || getVersion("Windows");
-    else if(               /Android \d/.test(nUA)) OS.Android      = getVersion("Android");
-    else if(                     /CrOS/.test(nUA)) OS.Chrome       = true;
-    else if(                     /X11;/.test(nUA)) OS.Linux        = true;
-    else if(                  /Firefox/.test(nUA)) OS.Firefox      = true;
+         if(/iP(hone|ad|od( touch)?);/.test(nUA)) OS.iOS          = getVersion("CPU (iP(hone|ad|od( touch)?) )?OS");
+    else if(          /OS X 10[\._]\d/.test(nUA)) OS.OSX          = getVersion("OS X 10[\\._]");
+    else if(  /Windows Phone( OS)? \d/.test(nUA)) OS.WindowsPhone = getVersion("Windows Phone OS") || getVersion("Windows Phone");
+    else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows      = getVersion("Windows NT") || getVersion("Windows");
+    else if(              /Android \d/.test(nUA)) OS.Android      = getVersion("Android");
+    else if(                    /CrOS/.test(nUA)) OS.Chrome       = true;
+    else if(                    /X11;/.test(nUA)) OS.Linux        = true;
+    else if(                 /Firefox/.test(nUA)) OS.Firefox      = true;
     return OS;
 })({});
 
