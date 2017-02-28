@@ -10,7 +10,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.42", Build = 201703010200;
+ */ sML = (function() { var Version = "0.999.43", Build = 201703010218;
 
 
 
@@ -31,13 +31,13 @@ var sML = function(S) {
 sML["version"] = Version, sML["build"] = Build;
 
 var nUA = navigator.userAgent;
-var getVersion = function(Prefix) {
-    var N = parseFloat(nUA.replace(new RegExp('^.*' + Prefix + '[ :\\/]?(\\d+([\\._]\\d+)?).*$'), "$1").replace(/_/g, "."));
+var getVersion = function(Prefix, Reference) {
+    var N = parseFloat(nUA.replace(new RegExp('^.*' + Prefix + '[ :\\/]?(\\d+([\\._]\\d+)?).*$'), Reference ? Reference : "$1").replace(/_/g, "."));
     return (!isNaN(N) ? N : undefined);
 };
 
 sML.OperatingSystem = sML.OS = (function(OS) {
-         if(/iP(hone|ad|od( touch)?);/.test(nUA)) OS.iOS          = getVersion("CPU (iP(hone|ad|od( touch)?) )?OS");
+         if(/iP(hone|ad|od( touch)?);/.test(nUA)) OS.iOS          = getVersion("CPU (iP(hone|ad|od( touch)?) )?OS", "$4");
     else if(          /OS X 10[\._]\d/.test(nUA)) OS.OSX          = getVersion("OS X 10[\\._]");
     else if(  /Windows Phone( OS)? \d/.test(nUA)) OS.WindowsPhone = getVersion("Windows Phone OS") || getVersion("Windows Phone");
     else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows      = getVersion("Windows NT") || getVersion("Windows");
