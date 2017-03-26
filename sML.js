@@ -1,9 +1,5 @@
-
-
-
-
 /*!
- *
+ *                                                                                                                         (℠)
  * # sML JavaScript Library
  *
  * - "I'm a Simple and Middling Library."
@@ -38,9 +34,9 @@ var getVersion = function(Prefix, Reference) {
 
 sML.OperatingSystem = sML.OS = (function(OS) {
          if(/iP(hone|ad|od( touch)?);/.test(nUA)) OS.iOS          = getVersion("CPU (iP(hone|ad|od( touch)?) )?OS", "$4");
-    else if(          /OS X 10[\._]\d/.test(nUA)) OS.OSX          = getVersion("OS X 10[\\._]");
+    else if(          /OS X 10[\._]\d/.test(nUA)) OS.macOS        = getVersion("OS X 10[\\._]");
     else if(  /Windows Phone( OS)? \d/.test(nUA)) OS.WindowsPhone = getVersion("Windows Phone OS") || getVersion("Windows Phone");
-    else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows      = getVersion("Windows NT") || getVersion("Windows");
+    else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows      = (function(W) { return (W >= 10 ? W : W >= 6.3 ? 8.1 : W >= 6.2 ? 8 : W >= 6.1 ? 7 : W); })(getVersion("Windows NT") || getVersion("Windows"));
     else if(              /Android \d/.test(nUA)) OS.Android      = getVersion("Android");
     else if(                    /CrOS/.test(nUA)) OS.Chrome       = true;
     else if(                    /X11;/.test(nUA)) OS.Linux        = true;
