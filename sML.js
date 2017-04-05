@@ -6,7 +6,7 @@
  * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.44", Build = 201703261955;
+ */ sML = (function() { var Version = "0.999.45", Build = 201704051525;
 
 
 
@@ -172,11 +172,12 @@ sML.Event = {
             },
             removeTouchEventObserver: function() {
                 Ele.TouchEventObserver.destroy();
-                delete(Ele.TouchEventObserver);
-                delete(Ele.TouchEventHandlers);
-                delete(Ele.addTouchEventListener);
-                delete(Ele.removeTouchEventListener);
-                delete(Ele.removeTouchEventObserver);
+                Ele.style["touch-action"] = "";
+                delete Ele.TouchEventObserver;
+                delete Ele.TouchEventHandlers;
+                delete Ele.addTouchEventListener;
+                delete Ele.removeTouchEventListener;
+                delete Ele.removeTouchEventObserver;
                 return Ele;
             }
         });
