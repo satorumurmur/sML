@@ -1,12 +1,12 @@
 /*!
  *                                                                                                                         (℠)
- * # sML JavaScript Library
+ *  sML JavaScript Library
  *
- * - "I'm a Simple and Middling Library."
- * - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
- * - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
+ *  - "I'm a Simple and Middling Library."
+ *  - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
+ *  - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.46", Build = 201704051737;
+ */ sML = (function() { var Version = "0.999.47", Build = 201704101657;
 
 
 
