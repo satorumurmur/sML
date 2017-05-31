@@ -6,7 +6,7 @@
  *  - Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
  *  - Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
  *
- */ sML = (function() { var Version = "0.999.47", Build = 201704101657;
+ */ sML = (function() { var Version = "0.999.48", Build = 201705311134;
 
 
 
@@ -618,14 +618,14 @@ sML.Coord = {
 sML.getCoord = function() { return sML.Coord.getCoord.apply(sML.Coord, arguments); };
 
 sML.Scroller = {
-    distillSetting: function(Tar, Opt) {
+    distillSetting: function(FXY, Opt) {
         var Setting = {};
-             if(Tar instanceof HTMLElement) Setting.Target = sML.Coord.getElementCoord(Tar);
-        else if(typeof Tar == "number")     Setting.Target = { X: undefined, Y: Tar   };
-        else if(Tar)                        Setting.Target = { X: Tar.X,     Y: Tar.Y };
+             if(FXY instanceof HTMLElement) Setting.Target = sML.Coord.getElementCoord(FXY);
+        else if(typeof FXY == "number")     Setting.Target = { X: undefined, Y: FXY   };
+        else if(FXY)                        Setting.Target = { X: FXY.X,     Y: FXY.Y };
         else                                return false;
-        Setting.Frame = (Tar.Frame && Tar.Frame instanceof HTMLElement) ? Tar.Frame : window;
-        Setting.scrollTo = (Setting.Frame && Setting.Frame instanceof HTMLElement) ? function(X, Y) { Setting.Frame.scrollLeft = X; Setting.Frame.scrollTop = Y; } : window.scrollTo;
+        Setting.Frame = (FXY.Frame && FXY.Frame instanceof HTMLElement) ? FXY.Frame : window;
+        Setting.scrollTo = (Setting.Frame === window) ? function(X, Y) { window.scrollTo(X, Y); } : function(X, Y) { this.Frame.scrollLeft = X; this.Frame.scrollTop = Y; };
         Setting.Start = sML.Coord.getScrollCoord(Setting.Frame);
         Setting.Start.Time = (new Date()).getTime();
         if(typeof Setting.Target.X != "number") Setting.Target.X = Setting.Start.X;
@@ -648,8 +648,8 @@ sML.Scroller = {
         Setting.ForceScroll = Opt.ForceScroll;
         return Setting;
     },
-    scrollTo: function(Tar, Opt) {
-        this.Setting = this.distillSetting(Tar, Opt);
+    scrollTo: function(FXY, Opt) {
+        this.Setting = this.distillSetting(FXY, Opt);
         if(!this.Setting) return false;
         this.scrollTo_begin();
     },
