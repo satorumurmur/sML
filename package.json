@@ -1,0 +1,19 @@
+{
+  "name": "sml",
+  "version": "1.0.0",
+  "description": "I'm a Simple and Middling Library.",
+  "main": "sML.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/satorumurmur/sML.git"
+  },
+  "author": "Satoru Matsushima",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/satorumurmur/sML/issues"
+  },
+  "homepage": "https://github.com/satorumurmur/sML#readme"
+}
