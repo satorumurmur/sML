@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.10' };
+const sML = { version: '1.0.11' };
 
 
 
@@ -639,12 +639,10 @@ sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
                 this[VP + 'RequestFullscreen'].apply(this, arguments);
             });
         };
-        Doc.addEventListener(VP + 'fullscreenchange', VP == 'webkit' ?
-            () => Doc.dispatchEvent(new Event('fullscreenchange', { bubbles: true, cancelable: false })) :
-            () => Doc.dispatchEvent((Eve => { Eve.initEvent('fullscreenchange', true, false); return Eve; })(Doc.createEvent('Event')))
-        );
+        if(VP == 'webkit') Doc.addEventListener('webkitfullscreenchange', () => Doc.dispatchEvent(new Event('fullscreenchange', { bubbles: true, cancelable: false })));
+        else               Doc.onmsfullscreenchange =                     () => Doc.dispatchEvent((Eve => { Eve.initEvent('fullscreenchange', true, false); return Eve; })(Doc.createEvent('Event')));
     }
-}
+};
 
 
 
