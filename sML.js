@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.9' };
+const sML = { version: '1.0.10' };
 
 
 
@@ -159,6 +159,8 @@ sML.clone = (Obj) => {
     fun.prototype = Obj;
     return new fun();
 };
+
+sML.replaceClass = (Ele, Old, New) => { if(Ele.classList.contains(Old)) Ele.classList.remove(Old); return Ele.classList.add(New); };
 
 
 
