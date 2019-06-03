@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.11' };
+const sML = { version: '1.0.13' };
 
 
 
@@ -37,13 +37,13 @@ const nUA = navigator.userAgent;
 const getVersion = (Prefix, Reference) => parseFloat(nUA.replace(new RegExp('^.*' + Prefix + '[ :\\/]?(\\d+([\\._]\\d+)?).*$'), Reference ? Reference : '$1').replace(/_/g, '.')) || undefined;
 
 sML.OperatingSystem = (OS => {
-         if(/ \(iP(hone|ad|od touch);/.test(nUA)) OS.iOS          = getVersion('CPU (iPhone )?OS', '$2');
-    else if(      /Mac OS X 10[\._]\d/.test(nUA)) OS.macOS        = getVersion('Mac OS X ');
-    else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows      = (W => W >= 10 ? W : W >= 6.3 ? 8.1 : W >= 6.2 ? 8 : W >= 6.1 ? 7 : W)(getVersion('Windows NT') || getVersion('Windows'));
-    else if(              /Android \d/.test(nUA)) OS.Android      = getVersion('Android');
-    else if(                    /CrOS/.test(nUA)) OS.Chrome       = true;
-    else if(                    /X11;/.test(nUA)) OS.Linux        = true;
-    else if(                 /Firefox/.test(nUA)) OS.Firefox      = true;
+         if(/ \(iP(hone|ad|od touch);/.test(nUA)) OS.iOS     = getVersion('CPU (iPhone )?OS', '$2');
+    else if(      /Mac OS X 10[\._]\d/.test(nUA)) OS.macOS   = getVersion('Mac OS X ');
+    else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows = (W => W >= 10 ? W : W >= 6.3 ? 8.1 : W >= 6.2 ? 8 : W >= 6.1 ? 7 : W)(getVersion('Windows NT') || getVersion('Windows'));
+    else if(              /Android \d/.test(nUA)) OS.Android = getVersion('Android');
+    else if(                    /CrOS/.test(nUA)) OS.Chrome  = true;
+    else if(                    /X11;/.test(nUA)) OS.Linux   = true;
+    else if(                 /Firefox/.test(nUA)) OS.Firefox = true;
     return OS;
 })({});
 
@@ -615,9 +615,10 @@ sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
         if(typeof Doc.fullscreenEnabled != 'undefined') return;
         if(typeof Promise != "function") throw new Error('[sML.js] sML.Fullscreen.fill() requires Promise.');
         const VP = Doc.webkitFullscreenEnabled ? 'webkit' : Doc.msFullscreenEnabled ? 'ms' : '';
-        if(!VP) {
-            Doc.fullscreenEnabled = false, Doc.fullscreenElement = null, Doc.exitFullscreen = HTMLElement.prototype.requestFullscreen = () => Promise.reject();
-            return;
+        switch(VP) {
+            case 'webkit': Doc.addEventListener('webkitfullscreenchange', () => Doc.dispatchEvent(        new Event('fullscreenchange', { bubbles: true, cancelable: false })                                ));  break;
+            case 'ms'    : Doc                    .onmsfullscreenchange = () => Doc.dispatchEvent((_ => _.initEvent('fullscreenchange',            true,             false  ) && _)(Doc.createEvent('Event'))) ;  break;
+            default      : Doc.fullscreenEnabled = false, Doc.fullscreenElement = null, Doc.exitFullscreen = Win.Element.prototype.requestFullscreen = () => Promise.reject()                                  ; return;
         }
         Object.defineProperties(Doc, {
             fullscreenEnabled: { get: () => Doc[VP + 'FullscreenEnabled'] },
@@ -639,8 +640,6 @@ sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
                 this[VP + 'RequestFullscreen'].apply(this, arguments);
             });
         };
-        if(VP == 'webkit') Doc.addEventListener('webkitfullscreenchange', () => Doc.dispatchEvent(new Event('fullscreenchange', { bubbles: true, cancelable: false })));
-        else               Doc.onmsfullscreenchange =                     () => Doc.dispatchEvent((Eve => { Eve.initEvent('fullscreenchange', true, false); return Eve; })(Doc.createEvent('Event')));
     }
 };
 
