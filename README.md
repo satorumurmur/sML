@@ -1,4 +1,4 @@
-sML
+sML.js
 ===
 
-JavaScript Library
+I'm a Simple and Middling Library.

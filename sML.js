@@ -19,25 +19,26 @@
 
 
 
-const sML = { version: '1.0.1' };
+const sML = { version: '1.0.9' };
 
 
 
 
 //==============================================================================================================================================
-//-- Polarstar
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-const nUA = navigator.userAgent;
-const getVersion = (Prefix, Reference) => {
-    const N = parseFloat(nUA.replace(new RegExp('^.*' + Prefix + '[ :\\/]?(\\d+([\\._]\\d+)?).*$'), Reference ? Reference : '$1').replace(/_/g, '.'));
-    return (!isNaN(N) ? N : undefined);
-};
+//-- Polarstar
 
-sML.OS = sML.OperatingSystem = (OS => {
-         if(/iP(hone|ad|od( touch)?);/.test(nUA)) OS.iOS          = getVersion('CPU (iP(hone|ad|od( touch)?) )?OS', '$4');
-    else if(          /OS X 10[\._]\d/.test(nUA)) OS.macOS        = getVersion('OS X ');
-    else if(  /Windows Phone( OS)? \d/.test(nUA)) OS.WindowsPhone = getVersion('Windows Phone OS') || getVersion('Windows Phone');
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+const nUA = navigator.userAgent;
+
+const getVersion = (Prefix, Reference) => parseFloat(nUA.replace(new RegExp('^.*' + Prefix + '[ :\\/]?(\\d+([\\._]\\d+)?).*$'), Reference ? Reference : '$1').replace(/_/g, '.')) || undefined;
+
+sML.OperatingSystem = (OS => {
+         if(/ \(iP(hone|ad|od touch);/.test(nUA)) OS.iOS          = getVersion('CPU (iPhone )?OS', '$2');
+    else if(      /Mac OS X 10[\._]\d/.test(nUA)) OS.macOS        = getVersion('Mac OS X ');
     else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows      = (W => W >= 10 ? W : W >= 6.3 ? 8.1 : W >= 6.2 ? 8 : W >= 6.1 ? 7 : W)(getVersion('Windows NT') || getVersion('Windows'));
     else if(              /Android \d/.test(nUA)) OS.Android      = getVersion('Android');
     else if(                    /CrOS/.test(nUA)) OS.Chrome       = true;
@@ -46,52 +47,59 @@ sML.OS = sML.OperatingSystem = (OS => {
     return OS;
 })({});
 
-sML.VP = sML.VendorPrefix = '';
-
-sML.UA = sML.UserAgent = (UA => {
+sML.UserAgent = (UA => {
     if(/Gecko\/\d/.test(nUA)) {
         UA.Gecko = getVersion('rv');
         if(/Firefox\/\d/.test(nUA)) UA.Firefox = getVersion('Firefox');
+        //UA.VendorPrefix = 'moz';
     } else if(/Edge\/\d/.test(nUA)) {
         UA.Edge = getVersion('Edge');
+        //UA.VendorPrefix = '';
     } else if(/Chrome\/\d/.test(nUA)) {
         UA.Blink = getVersion('Chrome') || true;
              if( /OPR\/\d/.test(nUA)) UA.Opera  = getVersion('OPR');
         else if(/Silk\/\d/.test(nUA)) UA.Silk   = getVersion('Silk');
         else                          UA.Chrome = UA.Blink;
+        //UA.VendorPrefix = '';
     } else if(/AppleWebKit\/\d/.test(nUA)) {
         UA.WebKit = getVersion('AppleWebKit');
              if(   /CriOS \d/.test(nUA)) UA.Chrome  = getVersion('CriOS');
         else if(   /FxiOS \d/.test(nUA)) UA.Firefox = getVersion('FxiOS');
         else if(/Version\/\d/.test(nUA)) UA.Safari  = getVersion('Version');
+        //UA.VendorPrefix = 'webkit';
     } else if(/Trident\/\d/.test(nUA)) {
         UA.Trident          = getVersion('Trident'); 
         UA.InternetExplorer = getVersion('rv') || getVersion('MSIE');
+        //UA.VendorPrefix = 'ms';
     }
-    try { UA.Flash = parseFloat(navigator.mimeTypes['application/x-shockwave-flash'].enabledPlugin.description.replace(/^.+?([\d\.]+).*$/, '$1')); } catch(e) {}
+    //try { UA.Flash = parseFloat(navigator.mimeTypes['application/x-shockwave-flash'].enabledPlugin.description.replace(/^.+?([\d\.]+).*$/, '$1')); } catch(Err) {}
     return UA;
 })({});
 
-sML.Environments = sML.Env = (Env => {
-    ['OS', 'UA'].forEach(OS_UA => { for(const Param in sML[OS_UA]) if(Param != 'Flash' && sML[OS_UA][Param]) Env.push(Param); });
-    return Env;
-})([]);
+sML.Environments = ['OperatingSystem', 'UserAgent'].reduce((Env, OS_UA) => { for(const Param in sML[OS_UA]) if(sML[OS_UA][Param]) Env.push(Param); return Env; }, []);
+
+Object.defineProperties(sML, {
+    OS:  { get: () => sML.OperatingSystem, set: (V) => sML.OperatingSystem = V },
+    UA:  { get: () => sML.UserAgent,       set: (V) => sML.UserAgent       = V },
+    Env: { get: () => sML.Environments,    set: (V) => sML.Environments    = V }
+});
 
 
 
 
 //==============================================================================================================================================
-//-- Utilities
 //----------------------------------------------------------------------------------------------------------------------------------------------
+
+//-- Utilities
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 sML.forEach = (Col, fun) => Col.forEach ? Col.forEach(fun) : Array.prototype.forEach.call(Col, fun);
 
 sML.applyRtL = (L, R, ExceptFunctions) => {
-    if(ExceptFunctions) {
-        for(let Pro in R) if(typeof L[Pro] != 'function' && typeof R[Pro] != 'function') L[Pro] = R[Pro];
-    } else {
-        for(let Pro in R)                                                                L[Pro] = R[Pro];
-    }
+    if(ExceptFunctions) { for(const Pro in R) if(typeof L[Pro] != 'function' && typeof R[Pro] != 'function') L[Pro] = R[Pro]; }
+    else                { for(const Pro in R)                                                                L[Pro] = R[Pro]; }
     return L;
 };
 
@@ -117,8 +125,12 @@ sML.random = (A, B) => {
 
 
 //==============================================================================================================================================
-//-- Object / DOM / Elements
 //----------------------------------------------------------------------------------------------------------------------------------------------
+
+//-- Object / DOM / Elements
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 sML.edit = (Obj, Pros) => {
     if(Obj.tagName) {
@@ -134,16 +146,11 @@ sML.edit = (Obj, Pros) => {
     return Obj;
 };
 
-sML.create = (Tag, Pros) => {
-    return sML.edit(document.createElement(Tag), Pros);
-};
+sML.create = (Tag, Pros) => sML.edit(document.createElement(Tag), Pros);
 
-sML.hatch = (...Args) => {
-    let HTML = '';
-    Args.forEach(Arg => HTML += Arg);
-    const Egg = document.createElement('div'), Chick = document.createDocumentFragment();
-    Egg.innerHTML = HTML;
-    for(let l = Egg.childNodes.length, i = 0; i < l; i++) Chick.appendChild(Egg.firstChild);
+sML.hatch = (HTML) => {
+    const Egg = sML.create('div', { innerHTML: HTML }), Chick = document.createDocumentFragment();
+    Array.prototype.forEach.call(Egg.childNodes, () => Chick.appendChild(Egg.firstChild));
     return Chick;
 };
 
@@ -157,8 +164,12 @@ sML.clone = (Obj) => {
 
 
 //==============================================================================================================================================
-//-- CSS
 //----------------------------------------------------------------------------------------------------------------------------------------------
+
+//-- CSS
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 sML.CSS = {
     getSMLStyleSheet: (Doc) => { if(!Doc) Doc = document;
@@ -184,12 +195,12 @@ sML.CSS = {
         const Sty = Ele.currentStyle || Doc.defaultView.getComputedStyle(Ele, (Pro ? Pro : '')) 
         return Sty;
     },
-    addTransitionEndListener: function(Ele, fun) {
+    addTransitionEndListener: (Ele, fun) => {
         if(typeof fun != 'function') return;
         Ele.sMLTransitionEndListener = fun;
         Ele.addEventListener('transitionEnd', Ele.sMLTransitionEndListener);
     },
-    removeTransitionEndListener: function(Ele) {
+    removeTransitionEndListener: (Ele) => {
         if(typeof Ele.sMLTransitionEndListener != 'function') return;
         Ele.removeEventListener('transitionEnd', Ele.sMLTransitionEndListener);
         delete Ele.sMLTransitionEndListener;
@@ -208,16 +219,20 @@ sML.CSS = {
     }
 };
 
-sML.style         = (...Args) => sML.CSS.setStyle  .apply(sML.CSS, Args);
-sML.appendCSSRule = (...Args) => sML.CSS.appendRule.apply(sML.CSS, Args);
-sML.deleteCSSRule = (...Args) => sML.CSS.deleteRule.apply(sML.CSS, Args);
+sML.style         = function() { return sML.CSS.setStyle  .apply(sML.CSS, arguments); };
+sML.appendCSSRule = function() { return sML.CSS.appendRule.apply(sML.CSS, arguments); };
+sML.deleteCSSRule = function() { return sML.CSS.deleteRule.apply(sML.CSS, arguments); };
 
 
 
 
 //==============================================================================================================================================
-//-- Coord
 //----------------------------------------------------------------------------------------------------------------------------------------------
+
+//-- Coord
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 sML.Coords = {
     getXY:          (    X, Y     ) => ({     X: X,          Y: Y      }),
@@ -290,13 +305,18 @@ sML.Coords = {
     }
 };
 
-sML.getCoord = (...Args) => sML.Coords.getCoord.apply(sML.Coords, Args);
+sML.getCoord = function() { return sML.Coords.getCoord.apply(sML.Coords, arguments); };
+
 
 
 
 //==============================================================================================================================================
-//-- CustomEvents
 //----------------------------------------------------------------------------------------------------------------------------------------------
+
+//-- CustomEvents
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 sML.CustomEvents = function(Prefix) { if(!Prefix) Prefix = 'sml';
     const _EL_   = Prefix + 'EventListener';
@@ -347,11 +367,15 @@ sML.CustomEvents = function(Prefix) { if(!Prefix) Prefix = 'sml';
 
 
 //==============================================================================================================================================
-//-- Scroller
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
+//-- Scroller
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+
 sML.Scroller = {
-    distillSetting: function(FXY, Opt) {
+    distillSetting: (FXY, Opt) => {
         const Setting = {};
              if(FXY instanceof HTMLElement) Setting.Target = sML.Coord.getElementCoord(FXY);
         else if(typeof FXY == 'number')     Setting.Target = { X: undefined, Y: FXY   };
@@ -410,7 +434,7 @@ sML.Scroller = {
         this.Setting.ForceScroll ? sML.Scroller.allowUserScrolling() : sML.Scroller.removeScrollCancelation();
         delete(this.Setting);
     },
-    cancelScrolling: function() {
+    cancelScrolling: () => {
         clearTimeout(sML.Scroller.Timer);
         sML.Scroller.Setting.canceled();
         delete(sML.Scroller.Setting);
@@ -423,13 +447,18 @@ sML.Scroller = {
     preventDefault:       (Eve) => Eve.preventDefault()
 };
 
-sML.scrollTo = (...Args) => sML.Scroller.scrollTo.apply(sML.Scroller, Args);
+sML.scrollTo = function() { return sML.Scroller.scrollTo.apply(sML.Scroller, arguments); };
+
 
 
 
 //==============================================================================================================================================
-//-- Easing
 //----------------------------------------------------------------------------------------------------------------------------------------------
+
+//-- Easing
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 sML.Easing = (typeof window.Easing == 'object') ? window.Easing : {};
 
@@ -440,11 +469,15 @@ sML.Easing.getEaser = (Eas) => (Pos) => Pos + Eas / 100 * (1 - Pos) * Pos;
 
 
 //==============================================================================================================================================
-//-- Cookies
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
+//-- Cookies
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+
 sML.Cookies = {
-    read: function(CookieName) {
+    read: (CookieName) => {
         if(typeof CookieName != 'string' || !CookieName) return '';
         CookieName = encodeURIComponent(CookieName);
         const CookieParts = document.cookie.split('; ');
@@ -457,7 +490,7 @@ sML.Cookies = {
         }
         return decodeURIComponent(CookieValue);
     },
-    write: function(CookieName, CookieValue, Opt) { const D = new Date();
+    write: (CookieName, CookieValue, Opt) => { const D = new Date();
         if(!CookieName || typeof CookieName  != 'string' || typeof CookieValue != 'string') return false;
         if(typeof Opt != 'object') Opt = {};
         CookieName  = encodeURIComponent(CookieName);
@@ -477,11 +510,15 @@ sML.Cookies = {
 
 
 //==============================================================================================================================================
-//-- Ranges
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
+//-- Ranges
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+
 sML.Ranges = {
-    selectRange: function(Ran) {
+    selectRange: (Ran) => {
         if(!Ran) return null;
         const Sel = window.getSelection();
         Sel.removeAllRanges();
@@ -517,7 +554,7 @@ sML.Ranges = {
         // Get StartText
         let StartTextStart = 0, StartText = ''; const StartTextEnd = StartNode.textContent.length - 1;
         DistilledText = this._distill(StartNode.textContent, StartTextStart, StartTextEnd);
-        while(this._flat(DistilledText) && !(new RegExp('^' + this._escape_flat(DistilledText))).test(SearchText)) {
+        while(this._flat(DistilledText) && !(new RegExp('^' + this._escape(this._flat(DistilledText)))).test(SearchText)) {
             StartTextStart++;
             DistilledText = this._distill(StartNode.textContent, StartTextStart, StartTextEnd);
         }
@@ -538,7 +575,7 @@ sML.Ranges = {
         // Get EndText
         const EndTextStart = 0; let EndText = '', EndTextEnd = EndNode.textContent.length - 1;
         DistilledText = this._distill(EndNode.textContent, EndTextStart, EndTextEnd);
-        while(this._flat(DistilledText) && !(new RegExp(this._escape_flat(DistilledText) + '$')).test(SearchText)) {
+        while(this._flat(DistilledText) && !(new RegExp(this._escape(this._flat(DistilledText)) + '$')).test(SearchText)) {
             EndTextEnd--;
             DistilledText = this._distill(EndNode.textContent, EndTextStart, EndTextEnd);
         }
@@ -555,17 +592,19 @@ sML.Ranges = {
               End: { Node: EndNode, Text: EndText }
         };
     },
-    _flat: function(Str) { return Str.replace(/[\r\n]/g, ''); },
-    _escape: function(Str) { return Str.replace(/([\(\)\{\}\[\]\,\.\-\+\*\?\!\:\^\$\/\\])/g, '\\$1'); },
-    _escape_flat: function(Str) { return this._escape(this._flat(Str)); },
-    _distill: function(Str, s, l) { for(let Distilled = '', i = s; i <= l; i++) Distilled += Str[i]; return Distilled; }
+    _flat: (Str) => Str.replace(/[\r\n]/g, ''),
+    _escape: (Str) => Str.replace(/([\(\)\{\}\[\]\,\.\-\+\*\?\!\:\^\$\/\\])/g, '\\$1'),
+    _distill: (Str, Start, End) => { let Distilled = ''; for(let i = Start; i <= End; i++) Distilled += Str[i]; return Distilled; }
 };
 
 
 
 
 //==============================================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
 //-- Fullscreen
+
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -611,3 +650,5 @@ sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
 //==============================================================================================================================================
 
 return sML; })());
+
+//==============================================================================================================================================
