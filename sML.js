@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.13' };
+const sML = { version: '1.0.14' };
 
 
 
@@ -133,16 +133,17 @@ sML.random = (A, B) => {
 
 
 sML.edit = (Obj, Pros) => {
-    if(Obj.tagName) {
-        for(const Pro in Pros) {
-            if(Pro == 'on' || Pro == 'style') continue;
-            if(/^data-/.test(Pro)) Obj.setAttribute(Pro, Pros[Pro]);
-            else                   Obj[Pro] = Pros[Pro];
-        }
-        if(Pros.on) for(const EN in Pros.on) Obj.addEventListener(EN, Pros.on[EN]);
-        if(Pros.style) sML.CSS.setStyle(Obj, Pros.style);
+    if(Pros) {
+        if(Obj.tagName) {
+            for(const Pro in Pros) {
+                if(Pro == 'on' || Pro == 'style') continue;
+                if(/^data-/.test(Pro)) Obj.setAttribute(Pro, Pros[Pro]);
+                else                   Obj[Pro] = Pros[Pro];
+            }
+            if(Pros.on) for(const EN in Pros.on) Obj.addEventListener(EN, Pros.on[EN]);
+            if(Pros.style) sML.CSS.setStyle(Obj, Pros.style);
+        } else for(const Pro in Pros)  Obj[Pro] = Pros[Pro];
     }
-    else for(const Pro in Pros)    Obj[Pro] = Pros[Pro];
     return Obj;
 };
 
