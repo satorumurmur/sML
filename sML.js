@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.14' };
+const sML = { version: '1.0.15' };
 
 
 
@@ -79,9 +79,9 @@ sML.UserAgent = (UA => {
 sML.Environments = ['OperatingSystem', 'UserAgent'].reduce((Env, OS_UA) => { for(const Param in sML[OS_UA]) if(sML[OS_UA][Param]) Env.push(Param); return Env; }, []);
 
 Object.defineProperties(sML, {
-    OS:  { get: () => sML.OperatingSystem, set: (V) => sML.OperatingSystem = V },
-    UA:  { get: () => sML.UserAgent,       set: (V) => sML.UserAgent       = V },
-    Env: { get: () => sML.Environments,    set: (V) => sML.Environments    = V }
+    OS:  { get: () => sML.OperatingSystem },
+    UA:  { get: () => sML.UserAgent       },
+    Env: { get: () => sML.Environments    }
 });
 
 
@@ -95,7 +95,7 @@ Object.defineProperties(sML, {
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
-sML.forEach = (Col, fun) => Col.forEach ? Col.forEach(fun) : Array.prototype.forEach.call(Col, fun);
+sML.forEach = (Col) => (fun, This) => Col.forEach ? Col.forEach(fun, This) : Array.prototype.forEach.call(Col, fun, This);
 
 sML.applyRtL = (L, R, ExceptFunctions) => {
     if(ExceptFunctions) { for(const Pro in R) if(typeof L[Pro] != 'function' && typeof R[Pro] != 'function') L[Pro] = R[Pro]; }
@@ -104,14 +104,13 @@ sML.applyRtL = (L, R, ExceptFunctions) => {
 };
 
 sML.replace = (Str, Reps) => {
-    if(!(Reps instanceof Array)) Reps = [Reps];
-    for(let l = Reps.length, i = 0; i < l; i++) Str = Str.replace(Reps[i][0], Reps[i][1]);
-    return Str;
+    if(!(Reps[0] instanceof Array))            return Str.replace(Reps   [0], Reps   [1]);
+    for(let l = Reps.length, i = 0; i < l; i++) Str = Str.replace(Reps[i][0], Reps[i][1]); return Str;
 };
 
-sML.limitMin    = (Num, Min     ) =>                      (Num < Min) ? Min :                     Num;
-sML.limitMax    = (Num,      Max) =>                                          (Max < Num) ? Max : Num;
-sML.limitMinMax = (Num, Min, Max) => (Max < Min) ? null : (Num < Min) ? Min : (Max < Num) ? Max : Num;
+sML.limitMin    = (Num, Min     ) =>                     (Num < Min) ? Min :                     Num;
+sML.limitMax    = (Num,      Max) =>                                         (Max < Num) ? Max : Num;
+sML.limitMinMax = (Num, Min, Max) => (Max < Min) ? NaN : (Num < Min) ? Min : (Max < Num) ? Max : Num;
 
 sML.random = (A, B) => {
          if(isNaN(A) && isNaN(B)) A = 0, B = 1;
@@ -175,7 +174,7 @@ sML.replaceClass = (Ele, Old, New) => { if(Ele.classList.contains(Old)) Ele.clas
 
 
 sML.CSS = {
-    getSMLStyleSheet: (Doc) => { if(!Doc) Doc = document;
+    _get_sMLStyle_sheet: (Doc = document) => {
         if(!Doc.sMLStyle) {
             Doc.sMLStyle = Doc.createElement('style');
             Doc.sMLStyle.appendChild(Doc.createTextNode(''));
@@ -184,15 +183,15 @@ sML.CSS = {
         return Doc.sMLStyle.sheet;
     },
     appendRule: function(Sel, Sty) { let Doc = document; if(typeof arguments[0] != 'string') Doc = arguments[0], Sel = arguments[1], Sty = arguments[2];
-        const SS = this.getSMLStyleSheet(Doc);
-        if(!SS) return null;
+        const sSs = this._get_sMLStyle_sheet(Doc);
+        if(!sSs) return null;
         if(typeof Sel.join == 'function') Sel = Sel.join(', '); // ['html', 'body']
-        if(typeof Sty.join == 'function') Sty = Sty.join(' '); // ['display: block;', 'position: static;']
-        return SS.insertRule(Sel + ' { ' + Sty + ' }', SS.cssRules.length);
+        if(typeof Sty.join == 'function') Sty = Sty.join( ' '); // ['display: block;', 'position: static;']
+        return sSs.insertRule(Sel + ' { ' + Sty + ' }', sSs.cssRules.length);
     },
     deleteRule: function(Ind) { let Doc = document; if(typeof arguments[0] != 'number') Doc = arguments[0], Ind = arguments[1];
-        const SS = this.getSMLStyleSheet(Doc);
-        if(SS) return SS.deleteRule(Ind);
+        const sSs = this._get_sMLStyle_sheet(Doc);
+        if(sSs) return sSs.deleteRule(Ind);
     },
     getComputedStyle: function(Ele, Pro) { let Doc = document; if(!arguments[0].tagName) Doc = arguments[0], Ele = arguments[1], Pro = arguments[2];
         const Sty = Ele.currentStyle || Doc.defaultView.getComputedStyle(Ele, (Pro ? Pro : '')) 
@@ -290,21 +289,21 @@ sML.Coords = {
         return (Eve ? this.getXY(Eve.pageX, Eve.pageY) : this.getXY(0, 0));
     },
     getCoord: function(Obj) {
-        let XY, WidthHeight;
-        /**/ if(Obj.tagName)     XY = this.getElementCoord(Obj), WidthHeight = this.getOffsetSize(Obj);
-        else if(Obj == window)   XY = this.getScrollCoord(),     WidthHeight = this.getOffsetSize(document.documentElement);
-        else if(Obj == document) XY = { X: 0,    Y: 0 },         WidthHeight = this.getScrollSize(document.documentElement);
-        else if(Obj == screen)   XY = { X: 0,    Y: 0 },         WidthHeight = this.getScreenSize();
+        let XY, WH;
+        /**/ if(Obj.tagName)     XY = this.getElementCoord(Obj), WH = this.getOffsetSize(Obj);
+        else if(Obj == window)   XY = this.getScrollCoord(),     WH = this.getOffsetSize(document.documentElement);
+        else if(Obj == document) XY = { X: 0, Y: 0 },            WH = this.getScrollSize(document.documentElement);
+        else if(Obj == screen)   XY = { X: 0, Y: 0 },            WH = this.getScreenSize();
         return {
                  X: XY.X,
-                 Y: XY.Y,
-               Top: XY.Y,
-             Right: XY.X + WidthHeight.Width,
-            Bottom: XY.Y + WidthHeight.Height,
+                 Y:       XY.Y,
+               Top:       XY.Y,
+             Right: XY.X      + WH.Width,
+            Bottom:       XY.Y          + WH.Height,
               Left: XY.X,
-             Width: WidthHeight.Width,
-            Height: WidthHeight.Height
-        }
+             Width:             WH.Width,
+            Height:                       WH.Height
+        };
     }
 };
 
@@ -321,7 +320,7 @@ sML.getCoord = function() { return sML.Coords.getCoord.apply(sML.Coords, argumen
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
-sML.CustomEvents = function(Prefix) { if(!Prefix) Prefix = 'sml';
+sML.CustomEvents = function(Prefix = 'sml') {
     const _EL_   = Prefix + 'EventListener';
     const _BELs_ = Prefix + 'BindedEventListeners';
     const NameRE = new RegExp('^' + Prefix + ':[\\w\\d\\-:]+$');
@@ -379,20 +378,20 @@ sML.CustomEvents = function(Prefix) { if(!Prefix) Prefix = 'sml';
 
 sML.Scroller = {
     distillSetting: (FXY, Opt) => {
-        const Setting = {};
-             if(FXY instanceof HTMLElement) Setting.Target = sML.Coord.getElementCoord(FXY);
-        else if(typeof FXY == 'number')     Setting.Target = { X: undefined, Y: FXY   };
-        else if(FXY)                        Setting.Target = { X: FXY.X,     Y: FXY.Y };
+        const Stg = {};
+             if(FXY instanceof HTMLElement) Stg.Target = sML.Coord.getElementCoord(FXY);
+        else if(typeof FXY == 'number')     Stg.Target = {           Y: FXY   };
+        else if(FXY)                        Stg.Target = { X: FXY.X, Y: FXY.Y };
         else                                return false;
-        Setting.Frame = (FXY.Frame && FXY.Frame instanceof HTMLElement) ? FXY.Frame : window;
-        Setting.scrollTo = (Setting.Frame === window) ? (X, Y) => window.scrollTo(X, Y) : (X, Y) => { Setting.Frame.scrollLeft = X, Setting.Frame.scrollTop = Y; };
-        Setting.Start = sML.Coords.getScrollCoord(Setting.Frame);
-        Setting.Start.Time = (new Date()).getTime();
-        if(typeof Setting.Target.X != 'number') Setting.Target.X = Setting.Start.X;
-        if(typeof Setting.Target.Y != 'number') Setting.Target.Y = Setting.Start.Y;
+        Stg.Frame = (FXY.Frame && FXY.Frame instanceof HTMLElement) ? FXY.Frame : window;
+        Stg.scrollTo = (Stg.Frame === window) ? (X, Y) => window.scrollTo(X, Y) : (X, Y) => { Stg.Frame.scrollLeft = X, Stg.Frame.scrollTop = Y; };
+        Stg.Start = sML.Coords.getScrollCoord(Stg.Frame);
+        Stg.Start.Time = (new Date()).getTime();
+        if(typeof Stg.Target.X != 'number') Stg.Target.X = Stg.Start.X;
+        if(typeof Stg.Target.Y != 'number') Stg.Target.Y = Stg.Start.Y;
         if(!Opt) Opt = {};
-        Setting.Duration = (typeof Opt.Duration == 'number' && Opt.Duration >= 0) ? Opt.Duration : 100;
-        Setting.ease = (() => {
+        Stg.Duration = (typeof Opt.Duration == 'number' && Opt.Duration >= 0) ? Opt.Duration : 100;
+        Stg.ease = (() => {
             switch(typeof Opt.Easing) {
                 case 'function': return Opt.Easing;
                 case 'string'  : return sML.Easing[Opt.Easing] ? sML.Easing[Opt.Easing] : sML.Easing.linear;
@@ -400,13 +399,13 @@ sML.Scroller = {
             }
             return sML.Easing.linear;
         })();
-        Setting.before   = typeof Opt.before   == 'function' ? Opt.before   : () => false;
-        Setting.among    = typeof Opt.among    == 'function' ? Opt.among    : () => false;
-        Setting.after    = typeof Opt.after    == 'function' ? Opt.after    : () => false;
-        Setting.callback = typeof Opt.callback == 'function' ? Opt.callback : () => false;
-        Setting.canceled = typeof Opt.canceled == 'function' ? Opt.canceled : () => false;
-        Setting.ForceScroll = Opt.ForceScroll;
-        return Setting;
+        Stg.before   = typeof Opt.before   == 'function' ? Opt.before   : () => false;
+        Stg.among    = typeof Opt.among    == 'function' ? Opt.among    : () => false;
+        Stg.after    = typeof Opt.after    == 'function' ? Opt.after    : () => false;
+        Stg.callback = typeof Opt.callback == 'function' ? Opt.callback : () => false;
+        Stg.canceled = typeof Opt.canceled == 'function' ? Opt.canceled : () => false;
+        Stg.ForceScroll = Opt.ForceScroll;
+        return Stg;
     },
     scrollTo: function(FXY, Opt) {
         this.Setting = this.distillSetting(FXY, Opt);
@@ -612,7 +611,7 @@ sML.Ranges = {
 
 
 sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
-    fill: (Win = window) => { const Doc = Win.document;
+    polyfill: (Win = window) => { const Doc = Win.document;
         if(typeof Doc.fullscreenEnabled != 'undefined') return;
         if(typeof Promise != "function") throw new Error('[sML.js] sML.Fullscreen.fill() requires Promise.');
         const VP = Doc.webkitFullscreenEnabled ? 'webkit' : Doc.msFullscreenEnabled ? 'ms' : '';
