@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.15' };
+const sML = { version: '1.0.16' };
 
 
 
@@ -95,13 +95,8 @@ Object.defineProperties(sML, {
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
-sML.forEach = (Col) => (fun, This) => Col.forEach ? Col.forEach(fun, This) : Array.prototype.forEach.call(Col, fun, This);
-
-sML.applyRtL = (L, R, ExceptFunctions) => {
-    if(ExceptFunctions) { for(const Pro in R) if(typeof L[Pro] != 'function' && typeof R[Pro] != 'function') L[Pro] = R[Pro]; }
-    else                { for(const Pro in R)                                                                L[Pro] = R[Pro]; }
-    return L;
-};
+//sML.forEach = (Col) => (fun, This) => Col.forEach ? Col.forEach(fun, This) : Array.prototype.forEach.call(Col, fun, This);
+sML.forEach = (Col) => (fun, This = window || self) => { const l = Col.length; for(let i = 0; i < l; i++) if(fun.call(This, Col[i], i, Col) == "break") break; };
 
 sML.replace = (Str, Reps) => {
     if(!(Reps[0] instanceof Array))            return Str.replace(Reps   [0], Reps   [1]);
@@ -159,6 +154,16 @@ sML.clone = (Obj) => {
     fun.prototype = Obj;
     return new fun();
 };
+
+sML.apply = (Par = {}, ExceptFunctions) => {
+    if(Par.From && Par.To) {
+        if(ExceptFunctions) { for(const Pro in Par.From) if(typeof Par.To[Pro] != 'function' && typeof Par.From[Pro] != 'function') Par.To[Pro] = Par.From[Pro]; }
+        else                { for(const Pro in Par.From)                                                                            Par.To[Pro] = Par.From[Pro]; }
+    }
+    return Par.To;
+};
+sML.applyLtR = (From, To, ExceptFunctions) => sML.apply({ From: From, To: To }, ExceptFunctions);
+sML.applyRtL = (To, From, ExceptFunctions) => sML.apply({ From: From, To: To }, ExceptFunctions);
 
 sML.replaceClass = (Ele, Old, New) => { if(Ele.classList.contains(Old)) Ele.classList.remove(Old); return Ele.classList.add(New); };
 
@@ -315,9 +320,13 @@ sML.getCoord = function() { return sML.Coords.getCoord.apply(sML.Coords, argumen
 //==============================================================================================================================================
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
-//-- CustomEvents
+//-- Events
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+sML.preventDefault  = (Eve) => Eve.preventDefault();
+sML.stopPropagation = (Eve) => Eve.stopPropagation();
 
 
 sML.CustomEvents = function(Prefix = 'sml') {
@@ -377,76 +386,74 @@ sML.CustomEvents = function(Prefix = 'sml') {
 
 
 sML.Scroller = {
-    distillSetting: (FXY, Opt) => {
-        const Stg = {};
+    scrollTo: function(FXY, Opt = {}) {
+        const Frame = (FXY.Frame && FXY.Frame instanceof HTMLElement) ? FXY.Frame : window;
+        let Stg = {};
+        if(Frame.sMLScrollerSetting) {
+            Stg = Frame.sMLScrollerSetting;
+            Stg.cancel();
+        } else {
+            Stg = Frame.sMLScrollerSetting = { Frame: Frame };
+            Stg.scrollTo = (Stg.Frame === window) ? (X, Y) => window.scrollTo(X, Y) : (X, Y) => { Stg.Frame.scrollLeft = X, Stg.Frame.scrollTop = Y; };
+            Stg.cancel = () => { Stg.removeScrollCancelation(); if(Stg.oncanceled) Stg.oncanceled(); };
+            Stg.   addScrollCancelation = () => ['keydown', 'mousedown', 'wheel'].forEach(EN => Stg.Frame.addEventListener   (EN, Stg.cancel        ));
+            Stg.removeScrollCancelation = () => ['keydown', 'mousedown', 'wheel'].forEach(EN => Stg.Frame.removeEventListener(EN, Stg.cancel        ));
+            Stg.preventUserScrolling    = () => ['keydown', 'mousedown', 'wheel'].forEach(EN => Stg.Frame.addEventListener   (EN, sML.preventDefault));
+            Stg.  allowUserScrolling    = () => ['keydown', 'mousedown', 'wheel'].forEach(EN => Stg.Frame.removeEventListener(EN, sML.preventDefault));
+        }
              if(FXY instanceof HTMLElement) Stg.Target = sML.Coord.getElementCoord(FXY);
         else if(typeof FXY == 'number')     Stg.Target = {           Y: FXY   };
         else if(FXY)                        Stg.Target = { X: FXY.X, Y: FXY.Y };
-        else                                return false;
-        Stg.Frame = (FXY.Frame && FXY.Frame instanceof HTMLElement) ? FXY.Frame : window;
-        Stg.scrollTo = (Stg.Frame === window) ? (X, Y) => window.scrollTo(X, Y) : (X, Y) => { Stg.Frame.scrollLeft = X, Stg.Frame.scrollTop = Y; };
+        else                                Stg.Target = null;
         Stg.Start = sML.Coords.getScrollCoord(Stg.Frame);
-        Stg.Start.Time = (new Date()).getTime();
-        if(typeof Stg.Target.X != 'number') Stg.Target.X = Stg.Start.X;
-        if(typeof Stg.Target.Y != 'number') Stg.Target.Y = Stg.Start.Y;
-        if(!Opt) Opt = {};
-        Stg.Duration = (typeof Opt.Duration == 'number' && Opt.Duration >= 0) ? Opt.Duration : 100;
-        Stg.ease = (() => {
-            switch(typeof Opt.Easing) {
-                case 'function': return Opt.Easing;
-                case 'string'  : return sML.Easing[Opt.Easing] ? sML.Easing[Opt.Easing] : sML.Easing.linear;
-                case 'number'  : return sML.Easing.getEaser(Opt.Easing);
-            }
-            return sML.Easing.linear;
-        })();
-        Stg.before   = typeof Opt.before   == 'function' ? Opt.before   : () => false;
-        Stg.among    = typeof Opt.among    == 'function' ? Opt.among    : () => false;
-        Stg.after    = typeof Opt.after    == 'function' ? Opt.after    : () => false;
-        Stg.callback = typeof Opt.callback == 'function' ? Opt.callback : () => false;
-        Stg.canceled = typeof Opt.canceled == 'function' ? Opt.canceled : () => false;
+        Stg.StartedOn = (new Date()).getTime();
+        if(Stg.Target) {
+            if(typeof Stg.Target.X != 'number') Stg.Target.X = Stg.Start.X;
+            if(typeof Stg.Target.Y != 'number') Stg.Target.Y = Stg.Start.Y;
+            Stg.Duration = (typeof Opt.Duration == 'number' && Opt.Duration >= 0) ? Opt.Duration : 100;
+        } else {
+            Stg.Duration = 0;
+        }
+        switch(typeof Opt.Easing) {
+            case 'function': Stg.ease = Opt.Easing;                                                          break;
+            case 'string'  : Stg.ease = sML.Easing[Opt.Easing] ? sML.Easing[Opt.Easing] : sML.Easing.linear; break;
+            case 'number'  : Stg.ease = sML.Easing.getEaser(Opt.Easing);                                     break;
+            default        : Stg.ease = sML.Easing.linear;                                                   break;
+        }
         Stg.ForceScroll = Opt.ForceScroll;
-        return Stg;
+        let recover;
+        if(Stg.ForceScroll) Stg.preventUserScrolling(), recover = () => Stg.allowUserScrolling();
+        else                Stg.addScrollCancelation(), recover = () => Stg.removeScrollCancelation();
+        Stg.after = () => {
+            clearTimeout(Stg.Timer);
+            delete Stg.oncanceled;
+            recover();
+        };
+        return new Promise((resolve, reject) => {
+            Stg.oncanceled = () => {
+                Stg.after();
+                reject();
+            };
+            this.scrollInProgress(Stg, resolve);
+        }).then(() => {
+            Stg.scrollTo(Stg.Target.X, Stg.Target.Y);
+            Stg.after();
+        });
     },
-    scrollTo: function(FXY, Opt) {
-        this.Setting = this.distillSetting(FXY, Opt);
-        if(!this.Setting) return false;
-        this.scrollTo_begin();
-    },
-    scrollTo_begin: function() {
-        clearTimeout(this.Timer);
-        this.Setting.ForceScroll ? this.preventUserScrolling() : this.addScrollCancelation();
-        this.Setting.before();
-        this.scrollTo_among();
-    },
-    scrollTo_among: function() {
-        let Progress = this.Setting.Duration ? ((new Date()).getTime() - this.Setting.Start.Time) / this.Setting.Duration : 1;
-        if(Progress >= 1) return this.scrollTo_end();
-        Progress = this.Setting.ease(Progress);
-        this.Setting.scrollTo(
-            Math.round(this.Setting.Start.X + (this.Setting.Target.X - this.Setting.Start.X) * Progress),
-            Math.round(this.Setting.Start.Y + (this.Setting.Target.Y - this.Setting.Start.Y) * Progress)
-        );
-        this.Setting.among();
-        this.Timer = setTimeout(function() { sML.Scroller.scrollTo_among(); }, 10);
-    },
-    scrollTo_end: function() {
-        this.Setting.scrollTo(this.Setting.Target.X, this.Setting.Target.Y);
-        this.Setting.after();
-        this.Setting.callback();
-        this.Setting.ForceScroll ? sML.Scroller.allowUserScrolling() : sML.Scroller.removeScrollCancelation();
-        delete(this.Setting);
-    },
-    cancelScrolling: () => {
-        clearTimeout(sML.Scroller.Timer);
-        sML.Scroller.Setting.canceled();
-        delete(sML.Scroller.Setting);
-        sML.Scroller.removeScrollCancelation();
-    },
-       addScrollCancelation: () => ['keydown', 'mousedown', 'wheel'].forEach(EN => document.addEventListener   (EN, sML.Scroller.cancelScrolling)),
-    removeScrollCancelation: () => ['keydown', 'mousedown', 'wheel'].forEach(EN => document.removeEventListener(EN, sML.Scroller.cancelScrolling)),
-    preventUserScrolling:    () => ['keydown', 'mousedown', 'wheel'].forEach(EN => document.addEventListener   (EN, sML.Scroller.preventDefault )),
-      allowUserScrolling:    () => ['keydown', 'mousedown', 'wheel'].forEach(EN => document.removeEventListener(EN, sML.Scroller.preventDefault )),
-    preventDefault:       (Eve) => Eve.preventDefault()
+    scrollInProgress: function(Stg, resolve) {
+        if(Stg.Target && Stg.Duration) {
+            const Passed = new Date().getTime() - Stg.StartedOn;
+            if(Stg.Duration <= Passed) return resolve();
+            const Progress = Stg.ease(Passed / Stg.Duration);
+            Stg.scrollInProgress(
+                Math.round(Stg.Start.X + (Stg.Target.X - Stg.Start.X) * Progress),
+                Math.round(Stg.Start.Y + (Stg.Target.Y - Stg.Start.Y) * Progress)
+            );
+            Stg.Timer = setTimeout(() => this.scroll(Stg), sML.limitMin(10, Stg.Duration - Passed));
+            return false;
+        }
+        return resolve();
+    }
 };
 
 sML.scrollTo = function() { return sML.Scroller.scrollTo.apply(sML.Scroller, arguments); };
@@ -611,7 +618,7 @@ sML.Ranges = {
 
 
 sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
-    polyfill: (Win = window) => { const Doc = Win.document;
+    polyfill: (Win = window || self) => { const Doc = Win.document;
         if(typeof Doc.fullscreenEnabled != 'undefined') return;
         if(typeof Promise != "function") throw new Error('[sML.js] sML.Fullscreen.fill() requires Promise.');
         const VP = Doc.webkitFullscreenEnabled ? 'webkit' : Doc.msFullscreenEnabled ? 'ms' : '';
