@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.16' };
+const sML = { version: '1.0.17' };
 
 
 
@@ -55,16 +55,18 @@ sML.UserAgent = (UA => {
     } else if(/Edge\/\d/.test(nUA)) {
         UA.Edge = getVersion('Edge');
         //UA.VendorPrefix = '';
-    } else if(/Chrome\/\d/.test(nUA)) {
-        UA.Blink = getVersion('Chrome') || true;
-             if( /OPR\/\d/.test(nUA)) UA.Opera  = getVersion('OPR');
+    } else if(/Chrom(ium|e)\/\d/.test(nUA)) {
+        UA.Chromium = getVersion('Chromium') || getVersion('Chrome') || true;
+             if( /Edg\/\d/.test(nUA)) UA.Edge   = getVersion('Edg');
+        else if( /OPR\/\d/.test(nUA)) UA.Opera  = getVersion('OPR');
         else if(/Silk\/\d/.test(nUA)) UA.Silk   = getVersion('Silk');
-        else                          UA.Chrome = UA.Blink;
+        else                          UA.Chrome = getVersion('Chrome') || UA.Chromium;
         //UA.VendorPrefix = '';
     } else if(/AppleWebKit\/\d/.test(nUA)) {
         UA.WebKit = getVersion('AppleWebKit');
              if(   /CriOS \d/.test(nUA)) UA.Chrome  = getVersion('CriOS');
         else if(   /FxiOS \d/.test(nUA)) UA.Firefox = getVersion('FxiOS');
+        else if( /EdgiOS\/\d/.test(nUA)) UA.Edge    = getVersion('EdgiOS');
         else if(/Version\/\d/.test(nUA)) UA.Safari  = getVersion('Version');
         //UA.VendorPrefix = 'webkit';
     } else if(/Trident\/\d/.test(nUA)) {
@@ -126,22 +128,27 @@ sML.random = (A, B) => {
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
-sML.edit = (Obj, Pros) => {
-    if(Pros) {
-        if(Obj.tagName) {
-            for(const Pro in Pros) {
+sML.edit = (Obj, ...ProSets) => {
+    const l = ProSets.length;
+    if(Obj.tagName) {
+        for(let i = 0; i < l; i++) { const ProSet = ProSets[i];
+            for(const Pro in ProSet) {
                 if(Pro == 'on' || Pro == 'style') continue;
-                if(/^data-/.test(Pro)) Obj.setAttribute(Pro, Pros[Pro]);
-                else                   Obj[Pro] = Pros[Pro];
+                if(/^data-/.test(Pro)) Obj.setAttribute(Pro, ProSet[Pro]);
+                else                   Obj[Pro] = ProSet[Pro];
             }
-            if(Pros.on) for(const EN in Pros.on) Obj.addEventListener(EN, Pros.on[EN]);
-            if(Pros.style) sML.CSS.setStyle(Obj, Pros.style);
-        } else for(const Pro in Pros)  Obj[Pro] = Pros[Pro];
+            if(ProSet.on) for(const EN in ProSet.on) Obj.addEventListener(EN, ProSet.on[EN]);
+            if(ProSet.style) sML.CSS.setStyle(Obj, ProSet.style);
+        }
+    } else {
+        for(let i = 0; i < l; i++) { const ProSet = ProSets[i];
+            for(const Pro in ProSet) Obj[Pro] = ProSet[Pro];
+        }
     }
     return Obj;
 };
 
-sML.create = (Tag, Pros) => sML.edit(document.createElement(Tag), Pros);
+sML.create = (Tag, ...ProSets) => sML.edit(document.createElement(Tag), ...ProSets);
 
 sML.hatch = (HTML) => {
     const Egg = sML.create('div', { innerHTML: HTML }), Chick = document.createDocumentFragment();
@@ -430,14 +437,10 @@ sML.Scroller = {
             recover();
         };
         return new Promise((resolve, reject) => {
-            Stg.oncanceled = () => {
-                Stg.after();
-                reject();
-            };
+            Stg.oncanceled = () => { Stg.after(); reject(); };
             this.scrollInProgress(Stg, resolve);
         }).then(() => {
-            Stg.scrollTo(Stg.Target.X, Stg.Target.Y);
-            Stg.after();
+            Stg.scrollTo(Stg.Target.X, Stg.Target.Y); Stg.after();
         });
     },
     scrollInProgress: function(Stg, resolve) {
@@ -445,11 +448,11 @@ sML.Scroller = {
             const Passed = new Date().getTime() - Stg.StartedOn;
             if(Stg.Duration <= Passed) return resolve();
             const Progress = Stg.ease(Passed / Stg.Duration);
-            Stg.scrollInProgress(
+            Stg.scrollTo(
                 Math.round(Stg.Start.X + (Stg.Target.X - Stg.Start.X) * Progress),
                 Math.round(Stg.Start.Y + (Stg.Target.Y - Stg.Start.Y) * Progress)
             );
-            Stg.Timer = setTimeout(() => this.scroll(Stg), sML.limitMin(10, Stg.Duration - Passed));
+            Stg.Timer = setTimeout(() => this.scrollInProgress(Stg, resolve), sML.limitMin(10, Stg.Duration - Passed));
             return false;
         }
         return resolve();
