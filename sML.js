@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.17' };
+const sML = { version: '1.0.18' };
 
 
 
@@ -37,10 +37,10 @@ const nUA = navigator.userAgent;
 const getVersion = (Prefix, Reference) => parseFloat(nUA.replace(new RegExp('^.*' + Prefix + '[ :\\/]?(\\d+([\\._]\\d+)?).*$'), Reference ? Reference : '$1').replace(/_/g, '.')) || undefined;
 
 sML.OperatingSystem = (OS => {
-         if(/ \(iP(hone|ad|od touch);/.test(nUA)) OS.iOS     = getVersion('CPU (iPhone )?OS', '$2');
-    else if(      /Mac OS X 10[\._]\d/.test(nUA)) OS.macOS   = getVersion('Mac OS X ');
-    else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows = (W => W >= 10 ? W : W >= 6.3 ? 8.1 : W >= 6.2 ? 8 : W >= 6.1 ? 7 : W)(getVersion('Windows NT') || getVersion('Windows'));
-    else if(              /Android \d/.test(nUA)) OS.Android = getVersion('Android');
+         if(/ \(iP(hone|ad|od touch);/.test(nUA)) OS.iOS     = getVersion('CPU (iPhone )?OS', '$2') || true;
+    else if(      /Mac OS X 10[\._]\d/.test(nUA)) OS.macOS   = getVersion('Mac OS X ') || true;
+    else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows = (W => W >= 10 ? W : W >= 6.3 ? 8.1 : W >= 6.2 ? 8 : W >= 6.1 ? 7 : W)(getVersion('Windows NT') || getVersion('Windows')) || true;
+    else if(              /Android \d/.test(nUA)) OS.Android = getVersion('Android') || true;
     else if(                    /CrOS/.test(nUA)) OS.Chrome  = true;
     else if(                    /X11;/.test(nUA)) OS.Linux   = true;
     else if(                 /Firefox/.test(nUA)) OS.Firefox = true;
@@ -49,32 +49,28 @@ sML.OperatingSystem = (OS => {
 
 sML.UserAgent = (UA => {
     if(/Gecko\/\d/.test(nUA)) {
-        UA.Gecko = getVersion('rv');
+        UA.Gecko = getVersion('rv') || true;
         if(/Firefox\/\d/.test(nUA)) UA.Firefox = getVersion('Firefox');
-        //UA.VendorPrefix = 'moz';
     } else if(/Edge\/\d/.test(nUA)) {
-        UA.Edge = getVersion('Edge');
-        //UA.VendorPrefix = '';
+        UA.EdgeHTML = getVersion('Edge') || true;
+        UA.Edge = UA.EdgeHTML;
     } else if(/Chrom(ium|e)\/\d/.test(nUA)) {
         UA.Chromium = getVersion('Chromium') || getVersion('Chrome') || true;
-             if( /Edg\/\d/.test(nUA)) UA.Edge   = getVersion('Edg');
-        else if( /OPR\/\d/.test(nUA)) UA.Opera  = getVersion('OPR');
-        else if(/Silk\/\d/.test(nUA)) UA.Silk   = getVersion('Silk');
+        UA.Blink = UA.Chromium;
+             if( /Edg\/\d/.test(nUA)) UA.Edge   = getVersion('Edg') || true;
+        else if( /OPR\/\d/.test(nUA)) UA.Opera  = getVersion('OPR') || true;
+        else if(/Silk\/\d/.test(nUA)) UA.Silk   = getVersion('Silk') || true;
         else                          UA.Chrome = getVersion('Chrome') || UA.Chromium;
-        //UA.VendorPrefix = '';
     } else if(/AppleWebKit\/\d/.test(nUA)) {
-        UA.WebKit = getVersion('AppleWebKit');
-             if(   /CriOS \d/.test(nUA)) UA.Chrome  = getVersion('CriOS');
-        else if(   /FxiOS \d/.test(nUA)) UA.Firefox = getVersion('FxiOS');
-        else if( /EdgiOS\/\d/.test(nUA)) UA.Edge    = getVersion('EdgiOS');
-        else if(/Version\/\d/.test(nUA)) UA.Safari  = getVersion('Version');
-        //UA.VendorPrefix = 'webkit';
+        UA.WebKit = getVersion('AppleWebKit') || true;
+             if(   /CriOS \d/.test(nUA)) UA.Chrome  = getVersion('CriOS') || true;
+        else if(   /FxiOS \d/.test(nUA)) UA.Firefox = getVersion('FxiOS') || true;
+        else if( /EdgiOS\/\d/.test(nUA)) UA.Edge    = getVersion('EdgiOS') || true;
+        else if(/Version\/\d/.test(nUA)) UA.Safari  = getVersion('Version') || true;
     } else if(/Trident\/\d/.test(nUA)) {
-        UA.Trident          = getVersion('Trident'); 
-        UA.InternetExplorer = getVersion('rv') || getVersion('MSIE');
-        //UA.VendorPrefix = 'ms';
+        UA.Trident          = getVersion('Trident') || true; 
+        UA.InternetExplorer = getVersion('rv') || getVersion('MSIE') || true;
     }
-    //try { UA.Flash = parseFloat(navigator.mimeTypes['application/x-shockwave-flash'].enabledPlugin.description.replace(/^.+?([\d\.]+).*$/, '$1')); } catch(Err) {}
     return UA;
 })({});
 
@@ -98,12 +94,13 @@ Object.defineProperties(sML, {
 
 
 //sML.forEach = (Col) => (fun, This) => Col.forEach ? Col.forEach(fun, This) : Array.prototype.forEach.call(Col, fun, This);
-sML.forEach = (Col) => (fun, This = window || self) => { const l = Col.length; for(let i = 0; i < l; i++) if(fun.call(This, Col[i], i, Col) == "break") break; };
+sML.forEach = (Col) => (fun, This = window || self) => { const l = Col.length; for(let i = 0; i < l; i++) if(fun.call(This, Col[i], i, Col) == 'break') break; };
 
 sML.replace = (Str, Reps) => {
     if(!(Reps[0] instanceof Array))            return Str.replace(Reps   [0], Reps   [1]);
     for(let l = Reps.length, i = 0; i < l; i++) Str = Str.replace(Reps[i][0], Reps[i][1]); return Str;
 };
+sML.capitalise = (Str) => Str.charAt(0).toUpperCase() + Str.slice(1);
 
 sML.limitMin    = (Num, Min     ) =>                     (Num < Min) ? Min :                     Num;
 sML.limitMax    = (Num,      Max) =>                                         (Max < Num) ? Max : Num;
@@ -411,15 +408,15 @@ sML.Scroller = {
              if(FXY instanceof HTMLElement) Stg.Target = sML.Coord.getElementCoord(FXY);
         else if(typeof FXY == 'number')     Stg.Target = {           Y: FXY   };
         else if(FXY)                        Stg.Target = { X: FXY.X, Y: FXY.Y };
-        else                                Stg.Target = null;
+        else                                Stg.Target = {                    };
         Stg.Start = sML.Coords.getScrollCoord(Stg.Frame);
-        Stg.StartedOn = (new Date()).getTime();
-        if(Stg.Target) {
-            if(typeof Stg.Target.X != 'number') Stg.Target.X = Stg.Start.X;
-            if(typeof Stg.Target.Y != 'number') Stg.Target.Y = Stg.Start.Y;
-            Stg.Duration = (typeof Opt.Duration == 'number' && Opt.Duration >= 0) ? Opt.Duration : 100;
-        } else {
-            Stg.Duration = 0;
+        Stg.StartedOn = new Date().getTime();
+        if(typeof Stg.Target.X != 'number') Stg.Target.X = Stg.Start.X;
+        if(typeof Stg.Target.Y != 'number') Stg.Target.Y = Stg.Start.Y;
+        Stg.Duration = (typeof Opt.Duration == 'number' && Opt.Duration >= 0) ? Opt.Duration : 100;
+        if(!Stg.Duration) {
+            Stg.scrollTo(Stg.Target.X, Stg.Target.Y);
+            return Promise.resolve();
         }
         switch(typeof Opt.Easing) {
             case 'function': Stg.ease = Opt.Easing;                                                          break;
@@ -440,22 +437,19 @@ sML.Scroller = {
             Stg.oncanceled = () => { Stg.after(); reject(); };
             this.scrollInProgress(Stg, resolve);
         }).then(() => {
-            Stg.scrollTo(Stg.Target.X, Stg.Target.Y); Stg.after();
+            Stg.scrollTo(Stg.Target.X, Stg.Target.Y);
+            Stg.after();
         });
     },
     scrollInProgress: function(Stg, resolve) {
-        if(Stg.Target && Stg.Duration) {
-            const Passed = new Date().getTime() - Stg.StartedOn;
-            if(Stg.Duration <= Passed) return resolve();
-            const Progress = Stg.ease(Passed / Stg.Duration);
-            Stg.scrollTo(
-                Math.round(Stg.Start.X + (Stg.Target.X - Stg.Start.X) * Progress),
-                Math.round(Stg.Start.Y + (Stg.Target.Y - Stg.Start.Y) * Progress)
-            );
-            Stg.Timer = setTimeout(() => this.scrollInProgress(Stg, resolve), sML.limitMin(10, Stg.Duration - Passed));
-            return false;
-        }
-        return resolve();
+        const Passed = new Date().getTime() - Stg.StartedOn;
+        if(Stg.Duration <= Passed) return resolve();
+        const Progress = Stg.ease(Passed / Stg.Duration);
+        Stg.scrollTo(
+            Math.round(Stg.Start.X + (Stg.Target.X - Stg.Start.X) * Progress),
+            Math.round(Stg.Start.Y + (Stg.Target.Y - Stg.Start.Y) * Progress)
+        );
+        Stg.Timer = setTimeout(() => this.scrollInProgress(Stg, resolve), sML.limitMax(10, Stg.Duration - Passed));
     }
 };
 
@@ -623,7 +617,7 @@ sML.Ranges = {
 sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
     polyfill: (Win = window || self) => { const Doc = Win.document;
         if(typeof Doc.fullscreenEnabled != 'undefined') return;
-        if(typeof Promise != "function") throw new Error('[sML.js] sML.Fullscreen.fill() requires Promise.');
+        if(typeof Promise != 'function') throw new Error('[sML.js] sML.Fullscreen.fill() requires Promise.');
         const VP = Doc.webkitFullscreenEnabled ? 'webkit' : Doc.msFullscreenEnabled ? 'ms' : '';
         switch(VP) {
             case 'webkit': Doc.addEventListener('webkitfullscreenchange', () => Doc.dispatchEvent(        new Event('fullscreenchange', { bubbles: true, cancelable: false })                                ));  break;
