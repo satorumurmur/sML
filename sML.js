@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.18' };
+const sML = { version: '1.0.19' };
 
 
 
@@ -101,6 +101,7 @@ sML.replace = (Str, Reps) => {
     for(let l = Reps.length, i = 0; i < l; i++) Str = Str.replace(Reps[i][0], Reps[i][1]); return Str;
 };
 sML.capitalise = (Str) => Str.charAt(0).toUpperCase() + Str.slice(1);
+sML.capitalize = (Str) => Str.charAt(0).toUpperCase() + Str.slice(1);
 
 sML.limitMin    = (Num, Min     ) =>                     (Num < Min) ? Min :                     Num;
 sML.limitMax    = (Num,      Max) =>                                         (Max < Num) ? Max : Num;
@@ -169,7 +170,10 @@ sML.apply = (Par = {}, ExceptFunctions) => {
 sML.applyLtR = (From, To, ExceptFunctions) => sML.apply({ From: From, To: To }, ExceptFunctions);
 sML.applyRtL = (To, From, ExceptFunctions) => sML.apply({ From: From, To: To }, ExceptFunctions);
 
-sML.replaceClass = (Ele, Old, New) => { if(Ele.classList.contains(Old)) Ele.classList.remove(Old); return Ele.classList.add(New); };
+sML.replaceClass = (Ele, Old, New) => {
+    if(Ele.classList.contains(Old)) Ele.classList.remove(Old);
+    return Ele.classList.add(New);
+};
 
 
 
@@ -193,46 +197,47 @@ sML.CSS = {
     },
     appendRule: function(Sel, Sty) { let Doc = document; if(typeof arguments[0] != 'string') Doc = arguments[0], Sel = arguments[1], Sty = arguments[2];
         const sSs = this._get_sMLStyle_sheet(Doc);
-        if(!sSs) return null;
-        if(typeof Sel.join == 'function') Sel = Sel.join(', '); // ['html', 'body']
-        if(typeof Sty.join == 'function') Sty = Sty.join( ' '); // ['display: block;', 'position: static;']
-        return sSs.insertRule(Sel + ' { ' + Sty + ' }', sSs.cssRules.length);
+        return sSs.insertRule((Sel instanceof Array ? Sel.join(', ') : Sel) + ' { ' + (Sty instanceof Array ? Sty.join(' ') : Sty) + ' }', sSs.cssRules.length);
     },
     deleteRule: function(Ind) { let Doc = document; if(typeof arguments[0] != 'number') Doc = arguments[0], Ind = arguments[1];
         const sSs = this._get_sMLStyle_sheet(Doc);
         if(sSs) return sSs.deleteRule(Ind);
     },
-    getComputedStyle: function(Ele, Pro) { let Doc = document; if(!arguments[0].tagName) Doc = arguments[0], Ele = arguments[1], Pro = arguments[2];
-        const Sty = Ele.currentStyle || Doc.defaultView.getComputedStyle(Ele, (Pro ? Pro : '')) 
-        return Sty;
+    setStyle: function(Ele, ...Stys) {
+        for(let l = Stys.length, i = 0; i < l; i++) for(const Pro in Stys[i]) Ele.style[Pro] = Stys[i][Pro];
+        return Promise.resolve();
     },
-    addTransitionEndListener: (Ele, fun) => {
-        if(typeof fun != 'function') return;
-        Ele.sMLTransitionEndListener = fun;
-        Ele.addEventListener('transitionEnd', Ele.sMLTransitionEndListener);
+    _add_sMLTransitionEndListener: function(Ele, fun) {
+        if(Ele._sMLTransitionEndListener) this._remove_sMLTransitionEndListener(Ele);
+        Ele._sMLTransitionEndListener = (Eve) => fun.call(Ele, Eve) && this._remove_sMLTransitionEndListener(Ele);
+        Ele.addEventListener('transitionend', Ele._sMLTransitionEndListener);
     },
-    removeTransitionEndListener: (Ele) => {
-        if(typeof Ele.sMLTransitionEndListener != 'function') return;
-        Ele.removeEventListener('transitionEnd', Ele.sMLTransitionEndListener);
-        delete Ele.sMLTransitionEndListener;
+    _remove_sMLTransitionEndListener: function(Ele) {
+        if(!Ele._sMLTransitionEndListener) return;
+        Ele.removeEventListener('transitionend', Ele._sMLTransitionEndListener);
+        delete Ele._sMLTransitionEndListener;
     },
-    setStyle: function(Ele, Sty) {
-        return new Promise((resolve, reject) => {
-            if(!Ele || !Sty) return reject();
-            this.removeTransitionEndListener(Ele);
-            this.addTransitionEndListener(Ele, resolve);
-            if(typeof Sty == 'string') Ele.style = Sty;
-            else {
-                for(const Pro in Sty) if(/^transition/.test(Pro)) { Ele.style[Pro] = Sty[Pro]; delete(Sty[Pro]); }
-                for(const Pro in Sty)                             { Ele.style[Pro] = Sty[Pro]; }
-            } 
+    setTransition: function(Ele, ...Stys) {
+        // If none of the changed properties are included in transition-property of the element,
+        // PromiseStatus keeps 'pending' until the next transition.
+        return new Promise(resolve => {
+            let CSty = Ele.getAttribute('style');
+            const _Stys = [CSty ? CSty.trim() : ''];
+            for(let l = Stys.length, i = 0; i < l; i++) for(const Pro in Stys[i]) {
+                const Val = Stys[i][Pro];
+                     if(Val !== '') _Stys.push(Pro + ': ' + Val + ';');
+                else if(_Stys[0]) _Stys[0] = _Stys[0].replace(new RegExp(Pro + '[ :\\-].+?(; *|$)', 'g'), '').trim();
+            }
+            this._add_sMLTransitionEndListener(Ele, Eve => resolve(Eve));
+            Ele.style = _Stys.join(' ');
         });
     }
 };
 
-sML.style         = function() { return sML.CSS.setStyle  .apply(sML.CSS, arguments); };
-sML.appendCSSRule = function() { return sML.CSS.appendRule.apply(sML.CSS, arguments); };
-sML.deleteCSSRule = function() { return sML.CSS.deleteRule.apply(sML.CSS, arguments); };
+sML.appendCSSRule = function() { return sML.CSS.appendRule   .apply(sML.CSS, arguments); };
+sML.deleteCSSRule = function() { return sML.CSS.deleteRule   .apply(sML.CSS, arguments); };
+sML.style         = function() { return sML.CSS.setStyle     .apply(sML.CSS, arguments); };
+sML.transition    = function() { return sML.CSS.setTransition.apply(sML.CSS, arguments); };
 
 
 
@@ -617,7 +622,7 @@ sML.Ranges = {
 sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
     polyfill: (Win = window || self) => { const Doc = Win.document;
         if(typeof Doc.fullscreenEnabled != 'undefined') return;
-        if(typeof Promise != 'function') throw new Error('[sML.js] sML.Fullscreen.fill() requires Promise.');
+        if(typeof Promise != 'function') throw new Error('[sML.js] sML.Fullscreen.polyfill() requires Promise.');
         const VP = Doc.webkitFullscreenEnabled ? 'webkit' : Doc.msFullscreenEnabled ? 'ms' : '';
         switch(VP) {
             case 'webkit': Doc.addEventListener('webkitfullscreenchange', () => Doc.dispatchEvent(        new Event('fullscreenchange', { bubbles: true, cancelable: false })                                ));  break;
