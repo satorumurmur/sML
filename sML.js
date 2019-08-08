@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.19' };
+const sML = { version: '1.0.20' };
 
 
 
@@ -32,54 +32,53 @@ const sML = { version: '1.0.19' };
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
-const nUA = navigator.userAgent;
+const NUA = navigator.userAgent;
 
-const getVersion = (Prefix, Reference) => parseFloat(nUA.replace(new RegExp('^.*' + Prefix + '[ :\\/]?(\\d+([\\._]\\d+)?).*$'), Reference ? Reference : '$1').replace(/_/g, '.')) || undefined;
+const getVersion = (Pre, Ref) => parseFloat(NUA.replace(new RegExp('^.*' + Pre + '[ :\\/]?(\\d+([\\._]\\d+)?).*$'), Ref ? Ref : '$1').replace(/_/g, '.')) || undefined;
 
 sML.OperatingSystem = (OS => {
-         if(/ \(iP(hone|ad|od touch);/.test(nUA)) OS.iOS     = getVersion('CPU (iPhone )?OS', '$2') || true;
-    else if(      /Mac OS X 10[\._]\d/.test(nUA)) OS.macOS   = getVersion('Mac OS X ') || true;
-    else if(        /Windows( NT)? \d/.test(nUA)) OS.Windows = (W => W >= 10 ? W : W >= 6.3 ? 8.1 : W >= 6.2 ? 8 : W >= 6.1 ? 7 : W)(getVersion('Windows NT') || getVersion('Windows')) || true;
-    else if(              /Android \d/.test(nUA)) OS.Android = getVersion('Android') || true;
-    else if(                    /CrOS/.test(nUA)) OS.Chrome  = true;
-    else if(                    /X11;/.test(nUA)) OS.Linux   = true;
-    else if(                 /Firefox/.test(nUA)) OS.Firefox = true;
+         if(/ \(iP(hone|ad|od touch);/.test(NUA)) OS.iOS     = getVersion('CPU (iPhone )?OS', '$2') || true;
+    else if(      /Mac OS X 10[\._]\d/.test(NUA)) OS.macOS   = getVersion('Mac OS X ') || true;
+    else if(        /Windows( NT)? \d/.test(NUA)) OS.Windows = (W => W >= 10 ? W : W >= 6.3 ? 8.1 : W >= 6.2 ? 8 : W >= 6.1 ? 7 : W)(getVersion('Windows NT') || getVersion('Windows')) || true;
+    else if(              /Android \d/.test(NUA)) OS.Android = getVersion('Android') || true;
+    else if(                    /CrOS/.test(NUA)) OS.Chrome  = true;
+    else if(                    /X11;/.test(NUA)) OS.Linux   = true;
+    else if(                 /Firefox/.test(NUA)) OS.Firefox = true;
     return OS;
 })({});
 
 sML.UserAgent = (UA => {
-    if(/Gecko\/\d/.test(nUA)) {
+    if(/Gecko\/\d/.test(NUA)) {
         UA.Gecko = getVersion('rv') || true;
-        if(/Firefox\/\d/.test(nUA)) UA.Firefox = getVersion('Firefox');
-    } else if(/Edge\/\d/.test(nUA)) {
+        if(/Firefox\/\d/.test(NUA)) UA.Firefox = getVersion('Firefox') || true;
+    } else if(/Edge\/\d/.test(NUA)) {
         UA.EdgeHTML = getVersion('Edge') || true;
         UA.Edge = UA.EdgeHTML;
-    } else if(/Chrom(ium|e)\/\d/.test(nUA)) {
+    } else if(/Chrom(ium|e)\/\d/.test(NUA)) {
         UA.Chromium = getVersion('Chromium') || getVersion('Chrome') || true;
         UA.Blink = UA.Chromium;
-             if( /Edg\/\d/.test(nUA)) UA.Edge   = getVersion('Edg') || true;
-        else if( /OPR\/\d/.test(nUA)) UA.Opera  = getVersion('OPR') || true;
-        else if(/Silk\/\d/.test(nUA)) UA.Silk   = getVersion('Silk') || true;
+             if( /Edg\/\d/.test(NUA)) UA.Edge   = getVersion('Edg') || true;
+        else if( /OPR\/\d/.test(NUA)) UA.Opera  = getVersion('OPR') || true;
+        else if(/Silk\/\d/.test(NUA)) UA.Silk   = getVersion('Silk') || true;
         else                          UA.Chrome = getVersion('Chrome') || UA.Chromium;
-    } else if(/AppleWebKit\/\d/.test(nUA)) {
+    } else if(/AppleWebKit\/\d/.test(NUA)) {
         UA.WebKit = getVersion('AppleWebKit') || true;
-             if(   /CriOS \d/.test(nUA)) UA.Chrome  = getVersion('CriOS') || true;
-        else if(   /FxiOS \d/.test(nUA)) UA.Firefox = getVersion('FxiOS') || true;
-        else if( /EdgiOS\/\d/.test(nUA)) UA.Edge    = getVersion('EdgiOS') || true;
-        else if(/Version\/\d/.test(nUA)) UA.Safari  = getVersion('Version') || true;
-    } else if(/Trident\/\d/.test(nUA)) {
+             if(   /CriOS \d/.test(NUA)) UA.Chrome  = getVersion('CriOS') || true;
+        else if(   /FxiOS \d/.test(NUA)) UA.Firefox = getVersion('FxiOS') || true;
+        else if( /EdgiOS\/\d/.test(NUA)) UA.Edge    = getVersion('EdgiOS') || true;
+        else if(/Version\/\d/.test(NUA)) UA.Safari  = getVersion('Version') || true;
+    } else if(/Trident\/\d/.test(NUA)) {
         UA.Trident          = getVersion('Trident') || true; 
         UA.InternetExplorer = getVersion('rv') || getVersion('MSIE') || true;
     }
     return UA;
 })({});
 
-sML.Environments = ['OperatingSystem', 'UserAgent'].reduce((Env, OS_UA) => { for(const Param in sML[OS_UA]) if(sML[OS_UA][Param]) Env.push(Param); return Env; }, []);
+sML.Environments = [sML.OperatingSystem, sML.UserAgent].reduce((Env, OS_UA) => { for(const Par in OS_UA) if(OS_UA[Par]) Env.push(Par); return Env; }, []);
 
 Object.defineProperties(sML, {
     OS:  { get: () => sML.OperatingSystem },
-    UA:  { get: () => sML.UserAgent       },
-    Env: { get: () => sML.Environments    }
+    UA:  { get: () => sML.UserAgent       }
 });
 
 
@@ -130,12 +129,9 @@ sML.edit = (Obj, ...ProSets) => {
     const l = ProSets.length;
     if(Obj.tagName) {
         for(let i = 0; i < l; i++) { const ProSet = ProSets[i];
-            for(const Pro in ProSet) {
-                if(Pro == 'on' || Pro == 'style') continue;
-                if(/^data-/.test(Pro)) Obj.setAttribute(Pro, ProSet[Pro]);
-                else                   Obj[Pro] = ProSet[Pro];
-            }
-            if(ProSet.on) for(const EN in ProSet.on) Obj.addEventListener(EN, ProSet.on[EN]);
+            for(const Pro in ProSet) if(Pro != 'data' && Pro != 'on' && Pro != 'style') Obj[Pro] = ProSet[Pro];
+            if(ProSet.data ) for(const EN in ProSet.data) Obj.setAttribute('data-' + EN, ProSet.data[EN]);
+            if(ProSet.on   ) for(const EN in ProSet.on  ) Obj.addEventListener(      EN, ProSet.on[  EN]);
             if(ProSet.style) sML.CSS.setStyle(Obj, ProSet.style);
         }
     } else {
@@ -204,7 +200,8 @@ sML.CSS = {
         if(sSs) return sSs.deleteRule(Ind);
     },
     setStyle: function(Ele, ...Stys) {
-        for(let l = Stys.length, i = 0; i < l; i++) for(const Pro in Stys[i]) Ele.style[Pro] = Stys[i][Pro];
+        if(Ele instanceof Array) for(let l = Ele.length, i = 0; i < l; i++) sML.CSS.setStyle(Ele[i], ...Stys);
+        else for(let l = Stys.length, i = 0; i < l; i++) for(const Pro in Stys[i]) Ele.style[Pro] = Stys[i][Pro];
         return Promise.resolve();
     },
     _add_sMLTransitionEndListener: function(Ele, fun) {
@@ -220,6 +217,11 @@ sML.CSS = {
     setTransition: function(Ele, ...Stys) {
         // If none of the changed properties are included in transition-property of the element,
         // PromiseStatus keeps 'pending' until the next transition.
+        if(Ele instanceof Array) {
+            const Promises = [];
+            for(let l = Ele.length, i = 0; i < l; i++) Promises.push(sML.CSS.setTransition(Ele[i], ...Stys));
+            return Promise.all(Promises);
+        }
         return new Promise(resolve => {
             let CSty = Ele.getAttribute('style');
             const _Stys = [CSty ? CSty.trim() : ''];
@@ -338,10 +340,10 @@ sML.preventDefault  = (Eve) => Eve.preventDefault();
 sML.stopPropagation = (Eve) => Eve.stopPropagation();
 
 
-sML.CustomEvents = function(Prefix = 'sml') {
-    const _EL_   = Prefix + 'EventListener';
-    const _BELs_ = Prefix + 'BindedEventListeners';
-    const NameRE = new RegExp('^' + Prefix + ':[\\w\\d\\-:]+$');
+sML.CustomEvents = function(Pre = 'sml') {
+    const _EL_   = Pre + 'EventListener';
+    const _BELs_ = Pre + 'BindedEventListeners';
+    const NameRE = new RegExp('^' + Pre + ':[\\w\\d\\-:]+$');
     this.add = function(Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
         if(Nam instanceof Array) return Nam.forEach(N => this.add(Tar, N, fun)) || fun;
         if(fun instanceof Array) return fun.forEach(f => this.add(Tar, Nam, f)) || fun;
@@ -620,14 +622,14 @@ sML.Ranges = {
 
 
 sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
-    polyfill: (Win = window || self) => { const Doc = Win.document;
+    polyfill: (Win = window || self) => { const Doc = Win.document, EPt = Win.Element.prototype;
         if(typeof Doc.fullscreenEnabled != 'undefined') return;
-        if(typeof Promise != 'function') throw new Error('[sML.js] sML.Fullscreen.polyfill() requires Promise.');
+        if(typeof Promise != 'function') throw new Error('sML.Fullscreen.polyfill requires Promise.');
         const VP = Doc.webkitFullscreenEnabled ? 'webkit' : Doc.msFullscreenEnabled ? 'ms' : '';
         switch(VP) {
             case 'webkit': Doc.addEventListener('webkitfullscreenchange', () => Doc.dispatchEvent(        new Event('fullscreenchange', { bubbles: true, cancelable: false })                                ));  break;
             case 'ms'    : Doc                    .onmsfullscreenchange = () => Doc.dispatchEvent((_ => _.initEvent('fullscreenchange',            true,             false  ) && _)(Doc.createEvent('Event'))) ;  break;
-            default      : Doc.fullscreenEnabled = false, Doc.fullscreenElement = null, Doc.exitFullscreen = Win.Element.prototype.requestFullscreen = () => Promise.reject()                                  ; return;
+            default      : Doc.fullscreenEnabled = false, Doc.fullscreenElement = null, Doc.exitFullscreen = EPt.requestFullscreen = () => Promise.reject()                                                    ; return;
         }
         Object.defineProperties(Doc, {
             fullscreenEnabled: { get: () => Doc[VP + 'FullscreenEnabled'] },
@@ -641,7 +643,7 @@ sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
                 this[VP + 'ExitFullscreen'].apply(this, arguments);
             });
         };
-        Win.Element.prototype.requestFullscreen = function() {
+        EPt.requestFullscreen = function() {
             return new Promise((resolve, reject) => {
                 if( Doc.fullscreenElement) return reject();
                 const onFullscreenChange = (Eve) => { resolve(Eve); Doc.removeEventListener('fullscreenchange', onFullscreenChange); }
