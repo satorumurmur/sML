@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.20' };
+const sML = { version: '1.0.21' };
 
 
 
@@ -34,42 +34,49 @@ const sML = { version: '1.0.20' };
 
 const NUA = navigator.userAgent;
 
-const getVersion = (Pre, Ref) => parseFloat(NUA.replace(new RegExp('^.*' + Pre + '[ :\\/]?(\\d+([\\._]\\d+)?).*$'), Ref ? Ref : '$1').replace(/_/g, '.')) || undefined;
+const dV = (Pre, Ref = '$1') => Pre ? (() => {
+    const RE = new RegExp('^.*' + Pre + '[ :\\/]?(\\d+([\\._]\\d+)*).*$');
+    return RE.test(NUA) ? NUA.replace(RE, Ref).replace(/_/g, '.').split('.').map(I => parseInt(I) || 0) : [];
+})() : []; // detectVersion
 
 sML.OperatingSystem = (OS => {
-         if(/ \(iP(hone|ad|od touch);/.test(NUA)) OS.iOS     = getVersion('CPU (iPhone )?OS', '$2') || true;
-    else if(      /Mac OS X 10[\._]\d/.test(NUA)) OS.macOS   = getVersion('Mac OS X ') || true;
-    else if(        /Windows( NT)? \d/.test(NUA)) OS.Windows = (W => W >= 10 ? W : W >= 6.3 ? 8.1 : W >= 6.2 ? 8 : W >= 6.1 ? 7 : W)(getVersion('Windows NT') || getVersion('Windows')) || true;
-    else if(              /Android \d/.test(NUA)) OS.Android = getVersion('Android') || true;
-    else if(                    /CrOS/.test(NUA)) OS.Chrome  = true;
-    else if(                    /X11;/.test(NUA)) OS.Linux   = true;
-    else if(                 /Firefox/.test(NUA)) OS.Firefox = true;
+    if(/Mac OS X/.test(NUA)) {
+             if(/\(iP(hone|ad|od touch);/.test(NUA)) OS.iOS    = dV('CPU (iPhone )?OS', '$2');
+        else if(  document.ontouchend !== undefined) OS.iPadOS = OS.iOS = dV();
+        else if(     /Mac OS X 10[\._]\d/.test(NUA)) OS.macOS  = dV('Mac OS X ');
+    }
+    else     if(       /Windows( NT)? \d/.test(NUA)) OS.Windows = (V => (V[0] != 6) ? V : (V[1] >= 3) ? [8, 1] : (V[1] >= 2) ? [8] : (V[1] >= 1) ? [7] : V)(dV('Windows( NT)?', '$2'));
+    else     if(             /Android \d/.test(NUA)) OS.Android = dV('Android');
+    else     if(                   /CrOS/.test(NUA)) OS.Chrome  = dV();
+    else     if(                   /X11;/.test(NUA)) OS.Linux   = dV();
+    else     if(                /Firefox/.test(NUA)) OS.Firefox = dV();
     return OS;
 })({});
 
 sML.UserAgent = (UA => {
     if(/Gecko\/\d/.test(NUA)) {
-        UA.Gecko = getVersion('rv') || true;
-        if(/Firefox\/\d/.test(NUA)) UA.Firefox = getVersion('Firefox') || true;
+        UA.Gecko = dV('rv');
+             if(/Waterfox\/\d/.test(NUA)) UA.Waterfox = dV('Waterfox');
+        else if( /Firefox\/\d/.test(NUA)) UA.Firefox  = dV('Firefox');
     } else if(/Edge\/\d/.test(NUA)) {
-        UA.EdgeHTML = getVersion('Edge') || true;
-        UA.Edge = UA.EdgeHTML;
+        UA.EdgeHTML = UA.Edge = dV('Edge');
     } else if(/Chrom(ium|e)\/\d/.test(NUA)) {
-        UA.Chromium = getVersion('Chromium') || getVersion('Chrome') || true;
-        UA.Blink = UA.Chromium;
-             if( /Edg\/\d/.test(NUA)) UA.Edge   = getVersion('Edg') || true;
-        else if( /OPR\/\d/.test(NUA)) UA.Opera  = getVersion('OPR') || true;
-        else if(/Silk\/\d/.test(NUA)) UA.Silk   = getVersion('Silk') || true;
-        else                          UA.Chrome = getVersion('Chrome') || UA.Chromium;
+        UA.Blink = UA.Chromium = (V => V[0] ? V : dV('Chrome'))(dV('Chromium'));
+             if(    /Edg\/\d/.test(NUA)) UA.Edge    = dV('Edg');
+        else if(    /OPR\/\d/.test(NUA)) UA.Opera   = dV('OPR');
+        else if(   /Silk\/\d/.test(NUA)) UA.Silk    = dV('Silk');
+        else if(/Vivaldi\/\d/.test(NUA)) UA.Vivaldi = dV('Vivaldi');
+        else if( /Phoebe\/\d/.test(NUA)) UA.Phoebe = UA.Lunascape = dV('Phoebe');
+        else                             UA.Chrome = (V => V[0] ? V : UA.Chromium)(dV('Chrome'));
     } else if(/AppleWebKit\/\d/.test(NUA)) {
-        UA.WebKit = getVersion('AppleWebKit') || true;
-             if(   /CriOS \d/.test(NUA)) UA.Chrome  = getVersion('CriOS') || true;
-        else if(   /FxiOS \d/.test(NUA)) UA.Firefox = getVersion('FxiOS') || true;
-        else if( /EdgiOS\/\d/.test(NUA)) UA.Edge    = getVersion('EdgiOS') || true;
-        else if(/Version\/\d/.test(NUA)) UA.Safari  = getVersion('Version') || true;
+        UA.WebKit = dV('AppleWebKit');
+             if(   /CriOS \d/.test(NUA)) UA.Chrome  = dV('CriOS');
+        else if(   /FxiOS \d/.test(NUA)) UA.Firefox = dV('FxiOS');
+        else if( /EdgiOS\/\d/.test(NUA)) UA.Edge    = dV('EdgiOS');
+        else if(/Version\/\d/.test(NUA)) UA.Safari  = dV('Version');
     } else if(/Trident\/\d/.test(NUA)) {
-        UA.Trident          = getVersion('Trident') || true; 
-        UA.InternetExplorer = getVersion('rv') || getVersion('MSIE') || true;
+        UA.Trident          = dV('Trident'); 
+        UA.InternetExplorer = (V => V[0] ? V : dV('MSIE'))(dV('rv'));
     }
     return UA;
 })({});
