@@ -3,7 +3,7 @@
  *  # sML.js | I'm a Simple and Middling Library.
  *
  *  * Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
- *  * Licensed under the MIT license. - http://www.opensource.org/licenses/mit-license.php
+ *  * Licensed under the MIT license. - https://www.opensource.org/licenses/mit-license.php
  *
  */
 
@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.21' };
+const sML = { version: '1.0.22' };
 
 
 
@@ -34,49 +34,49 @@ const sML = { version: '1.0.21' };
 
 const NUA = navigator.userAgent;
 
-const dV = (Pre, Ref = '$1') => Pre ? (() => {
+const _dV = (Pre, Ref = '$1') => Pre ? (() => {
     const RE = new RegExp('^.*' + Pre + '[ :\\/]?(\\d+([\\._]\\d+)*).*$');
     return RE.test(NUA) ? NUA.replace(RE, Ref).replace(/_/g, '.').split('.').map(I => parseInt(I) || 0) : [];
 })() : []; // detectVersion
 
 sML.OperatingSystem = (OS => {
     if(/Mac OS X/.test(NUA)) {
-             if(/\(iP(hone|ad|od touch);/.test(NUA)) OS.iOS    = dV('CPU (iPhone )?OS', '$2');
-        else if(  document.ontouchend !== undefined) OS.iPadOS = OS.iOS = dV();
-        else if(     /Mac OS X 10[\._]\d/.test(NUA)) OS.macOS  = dV('Mac OS X ');
+             if(/\(iP(hone|ad|od touch);/.test(NUA)) OS.iOS    = _dV('CPU (iPhone )?OS', '$2');
+        else if(  document.ontouchend !== undefined) OS.iPadOS = OS.iOS = _dV();
+        else if(     /Mac OS X 10[\._]\d/.test(NUA)) OS.macOS  = _dV('Mac OS X ');
     }
-    else     if(       /Windows( NT)? \d/.test(NUA)) OS.Windows = (V => (V[0] != 6) ? V : (V[1] >= 3) ? [8, 1] : (V[1] >= 2) ? [8] : (V[1] >= 1) ? [7] : V)(dV('Windows( NT)?', '$2'));
-    else     if(             /Android \d/.test(NUA)) OS.Android = dV('Android');
-    else     if(                   /CrOS/.test(NUA)) OS.Chrome  = dV();
-    else     if(                   /X11;/.test(NUA)) OS.Linux   = dV();
-    else     if(                /Firefox/.test(NUA)) OS.Firefox = dV();
+    else if(/Windows( NT)? \d/.test(NUA)) OS.Windows = (V => (V[0] != 6) ? V : (V[1] >= 3) ? [8, 1] : (V[1] >= 2) ? [8] : (V[1] >= 1) ? [7] : V)(_dV('Windows( NT)?', '$2'));
+    else if(      /Android \d/.test(NUA)) OS.Android = _dV('Android');
+    else if(            /CrOS/.test(NUA)) OS.Chrome  = _dV();
+    else if(            /X11;/.test(NUA)) OS.Linux   = _dV();
+    else if(         /Firefox/.test(NUA)) OS.Firefox = _dV();
     return OS;
 })({});
 
 sML.UserAgent = (UA => {
     if(/Gecko\/\d/.test(NUA)) {
-        UA.Gecko = dV('rv');
-             if(/Waterfox\/\d/.test(NUA)) UA.Waterfox = dV('Waterfox');
-        else if( /Firefox\/\d/.test(NUA)) UA.Firefox  = dV('Firefox');
+        UA.Gecko = _dV('rv');
+             if(/Waterfox\/\d/.test(NUA)) UA.Waterfox = _dV('Waterfox');
+        else if( /Firefox\/\d/.test(NUA)) UA.Firefox  = _dV('Firefox');
     } else if(/Edge\/\d/.test(NUA)) {
-        UA.EdgeHTML = UA.Edge = dV('Edge');
+        UA.EdgeHTML = UA.Edge = _dV('Edge');
     } else if(/Chrom(ium|e)\/\d/.test(NUA)) {
-        UA.Blink = UA.Chromium = (V => V[0] ? V : dV('Chrome'))(dV('Chromium'));
-             if(    /Edg\/\d/.test(NUA)) UA.Edge    = dV('Edg');
-        else if(    /OPR\/\d/.test(NUA)) UA.Opera   = dV('OPR');
-        else if(   /Silk\/\d/.test(NUA)) UA.Silk    = dV('Silk');
-        else if(/Vivaldi\/\d/.test(NUA)) UA.Vivaldi = dV('Vivaldi');
-        else if( /Phoebe\/\d/.test(NUA)) UA.Phoebe = UA.Lunascape = dV('Phoebe');
-        else                             UA.Chrome = (V => V[0] ? V : UA.Chromium)(dV('Chrome'));
+        UA.Blink = UA.Chromium = (V => V[0] ? V : _dV('Chrome'))(_dV('Chromium'));
+             if(    /Edg\/\d/.test(NUA)) UA.Edge    = _dV('Edg');
+        else if(    /OPR\/\d/.test(NUA)) UA.Opera   = _dV('OPR');
+        else if(   /Silk\/\d/.test(NUA)) UA.Silk    = _dV('Silk');
+        else if(/Vivaldi\/\d/.test(NUA)) UA.Vivaldi = _dV('Vivaldi');
+        else if( /Phoebe\/\d/.test(NUA)) UA.Phoebe  = _dV('Phoebe');
+        else                             UA.Chrome  = (V => V[0] ? V : UA.Chromium)(_dV('Chrome'));
     } else if(/AppleWebKit\/\d/.test(NUA)) {
-        UA.WebKit = dV('AppleWebKit');
-             if(   /CriOS \d/.test(NUA)) UA.Chrome  = dV('CriOS');
-        else if(   /FxiOS \d/.test(NUA)) UA.Firefox = dV('FxiOS');
-        else if( /EdgiOS\/\d/.test(NUA)) UA.Edge    = dV('EdgiOS');
-        else if(/Version\/\d/.test(NUA)) UA.Safari  = dV('Version');
+        UA.WebKit = _dV('AppleWebKit');
+             if(   /CriOS \d/.test(NUA)) UA.Chrome  = _dV('CriOS');
+        else if(   /FxiOS \d/.test(NUA)) UA.Firefox = _dV('FxiOS');
+        else if( /EdgiOS\/\d/.test(NUA)) UA.Edge    = _dV('EdgiOS');
+        else if(/Version\/\d/.test(NUA)) UA.Safari  = _dV('Version');
     } else if(/Trident\/\d/.test(NUA)) {
-        UA.Trident          = dV('Trident'); 
-        UA.InternetExplorer = (V => V[0] ? V : dV('MSIE'))(dV('rv'));
+        UA.Trident          = _dV('Trident'); 
+        UA.InternetExplorer = (V => V[0] ? V : _dV('MSIE'))(_dV('rv'));
     }
     return UA;
 })({});
@@ -84,8 +84,8 @@ sML.UserAgent = (UA => {
 sML.Environments = [sML.OperatingSystem, sML.UserAgent].reduce((Env, OS_UA) => { for(const Par in OS_UA) if(OS_UA[Par]) Env.push(Par); return Env; }, []);
 
 Object.defineProperties(sML, {
-    OS:  { get: () => sML.OperatingSystem },
-    UA:  { get: () => sML.UserAgent       }
+    OS: { get: () => sML.OperatingSystem },
+    UA: { get: () => sML.UserAgent       }
 });
 
 
@@ -635,7 +635,7 @@ sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
         const VP = Doc.webkitFullscreenEnabled ? 'webkit' : Doc.msFullscreenEnabled ? 'ms' : '';
         switch(VP) {
             case 'webkit': Doc.addEventListener('webkitfullscreenchange', () => Doc.dispatchEvent(        new Event('fullscreenchange', { bubbles: true, cancelable: false })                                ));  break;
-            case 'ms'    : Doc                    .onmsfullscreenchange = () => Doc.dispatchEvent((_ => _.initEvent('fullscreenchange',            true,             false  ) && _)(Doc.createEvent('Event'))) ;  break;
+            case 'ms'    : Doc                    .onmsfullscreenchange = () => Doc.dispatchEvent((_ => _.initEvent('fullscreenchange',            true,             false  ) || _)(Doc.createEvent('Event'))) ;  break;
             default      : Doc.fullscreenEnabled = false, Doc.fullscreenElement = null, Doc.exitFullscreen = EPt.requestFullscreen = () => Promise.reject()                                                    ; return;
         }
         Object.defineProperties(Doc, {
