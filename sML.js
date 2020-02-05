@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.22' };
+const sML = { version: '1.0.23' };
 
 
 
@@ -351,43 +351,45 @@ sML.CustomEvents = function(Pre = 'sml') {
     const _EL_   = Pre + 'EventListener';
     const _BELs_ = Pre + 'BindedEventListeners';
     const NameRE = new RegExp('^' + Pre + ':[\\w\\d\\-:]+$');
-    this.add = function(Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
+    this.add = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
         if(Nam instanceof Array) return Nam.forEach(N => this.add(Tar, N, fun)) || fun;
         if(fun instanceof Array) return fun.forEach(f => this.add(Tar, Nam, f)) || fun;
-        if(!(typeof Tar == 'object' && typeof Nam == 'string' && NameRE.test(Nam) && typeof fun == 'function')) return false;
+        if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
         if(!fun[_EL_]) fun[_EL_] = (Eve) => fun.call(Tar, Eve.detail);
         Tar.addEventListener(Nam, fun[_EL_], false);
         return fun;
     };
-    this.remove = function(Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
+    this.remove = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
         if(Nam instanceof Array) return Nam.forEach(N => this.remove(Tar, N, fun)) || fun;
         if(fun instanceof Array) return fun.forEach(f => this.remove(Tar, Nam, f)) || fun;
-        if(!(typeof Tar == 'object' && typeof Nam == 'string' && NameRE.test(Nam) && typeof fun == 'function')) return false;
+        if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
         Tar.removeEventListener(Nam, fun[_EL_]);
         return fun;
     };
-    this.bind = function(Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
+    this.bind = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
         if(Nam instanceof Array) return Nam.forEach(N => this.bind(Tar, N, fun)) || fun;
         if(fun instanceof Array) return fun.forEach(f => this.bind(Tar, Nam, f)) || fun;
-        if(!(typeof Tar == 'object' && typeof Nam == 'string' && NameRE.test(Nam) && typeof fun == 'function')) return false;
+        if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
         if(!Tar[_BELs_]) Tar[_BELs_] = {};
         if(!(Tar[_BELs_][Nam] instanceof Array)) Tar[_BELs_][Nam] = [];
         Tar[_BELs_][Nam] = Tar[_BELs_][Nam].filter(bEL => (bEL != fun));
         Tar[_BELs_][Nam].push(fun);
         return fun;
     };
-    this.unbind = function(Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
+    this.unbind = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
         if(Nam instanceof Array) return Nam.forEach(N => this.unbind(Tar, N, fun)) || fun;
         if(fun instanceof Array) return fun.forEach(f => this.unbind(Tar, Nam, f)) || fun;
-        if(!(typeof Tar == 'object' && typeof Nam == 'string' && NameRE.test(Nam) && typeof fun == 'function')) return false;
+        if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
         if(!(Tar[_BELs_] && Tar[_BELs_][Nam] instanceof Array)) return false;
         Tar[_BELs_][Nam] = Tar[_BELs_][Nam].filter(bEL => (bEL != fun));
         return fun;
     };
-    this.dispatch = function(Nam, Det) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], Det = arguments[2];
-        if(!(typeof Tar == 'object' && typeof Nam == 'string' && NameRE.test(Nam))) return false;
+    this.dispatch = function(/*[Tar,]*/ Nam, Det) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], Det = arguments[2];
+        if(Nam instanceof Array) return Nam.forEach(N => this.dispatch(Tar, N, Det)) || Det;
+        if(typeof Tar != 'object' || !NameRE.test(Nam)) return false;
         if(Tar[_BELs_] && Tar[_BELs_][Nam] instanceof Array) Tar[_BELs_][Nam].forEach(bEL => (typeof bEL == 'function') ? bEL.call(Tar, Det) : false);
-        return Tar.dispatchEvent(new CustomEvent(Nam, { detail: Det }));
+        Tar.dispatchEvent(new CustomEvent(Nam, { detail: Det }));
+        return Det;
     };
     return this;
 };
