@@ -2,7 +2,7 @@
  *                                                                                                                         (℠)
  *  # sML.js | I'm a Simple and Middling Library.
  *
- *  * Copyright (c) Satoru MATSUSHIMA - https://github.com/satorumurmur/sML
+ *  * Copyright (c) Satoru Matsushima - https://github.com/satorumurmur/sML
  *  * Licensed under the MIT license. - https://www.opensource.org/licenses/mit-license.php
  *
  */
@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.23' };
+const sML = { version: '1.0.24' };
 
 
 
