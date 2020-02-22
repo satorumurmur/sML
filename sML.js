@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.24' };
+const sML = { version: '1.0.25' };
 
 
 
@@ -352,6 +352,7 @@ sML.CustomEvents = function(Pre = 'sml') {
     const _BELs_ = Pre + 'BindedEventListeners';
     const NameRE = new RegExp('^' + Pre + ':[\\w\\d\\-:]+$');
     this.add = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
+        if(Tar instanceof Array) return Tar.forEach(T => this.add(T, Nam, fun)) || fun;
         if(Nam instanceof Array) return Nam.forEach(N => this.add(Tar, N, fun)) || fun;
         if(fun instanceof Array) return fun.forEach(f => this.add(Tar, Nam, f)) || fun;
         if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
@@ -360,6 +361,7 @@ sML.CustomEvents = function(Pre = 'sml') {
         return fun;
     };
     this.remove = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
+        if(Tar instanceof Array) return Tar.forEach(T => this.remove(T, Nam, fun)) || fun;
         if(Nam instanceof Array) return Nam.forEach(N => this.remove(Tar, N, fun)) || fun;
         if(fun instanceof Array) return fun.forEach(f => this.remove(Tar, Nam, f)) || fun;
         if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
@@ -367,6 +369,7 @@ sML.CustomEvents = function(Pre = 'sml') {
         return fun;
     };
     this.bind = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
+        if(Tar instanceof Array) return Tar.forEach(T => this.bind(T, Nam, fun)) || fun;
         if(Nam instanceof Array) return Nam.forEach(N => this.bind(Tar, N, fun)) || fun;
         if(fun instanceof Array) return fun.forEach(f => this.bind(Tar, Nam, f)) || fun;
         if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
@@ -377,6 +380,7 @@ sML.CustomEvents = function(Pre = 'sml') {
         return fun;
     };
     this.unbind = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
+        if(Tar instanceof Array) return Tar.forEach(T => this.unbind(T, Nam, fun)) || fun;
         if(Nam instanceof Array) return Nam.forEach(N => this.unbind(Tar, N, fun)) || fun;
         if(fun instanceof Array) return fun.forEach(f => this.unbind(Tar, Nam, f)) || fun;
         if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
@@ -385,6 +389,7 @@ sML.CustomEvents = function(Pre = 'sml') {
         return fun;
     };
     this.dispatch = function(/*[Tar,]*/ Nam, Det) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], Det = arguments[2];
+        if(Tar instanceof Array) return Tar.forEach(T => this.dispatch(T, Nam, Det)) || Det;
         if(Nam instanceof Array) return Nam.forEach(N => this.dispatch(Tar, N, Det)) || Det;
         if(typeof Tar != 'object' || !NameRE.test(Nam)) return false;
         if(Tar[_BELs_] && Tar[_BELs_][Nam] instanceof Array) Tar[_BELs_][Nam].forEach(bEL => (typeof bEL == 'function') ? bEL.call(Tar, Det) : false);
