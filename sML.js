@@ -19,7 +19,7 @@
 
 
 
-const sML = { version: '1.0.25' };
+const sML = { version: '1.0.26' };
 
 
 
@@ -421,10 +421,10 @@ sML.Scroller = {
             Stg = Frame.sMLScrollerSetting = { Frame: Frame };
             Stg.scrollTo = (Stg.Frame === window) ? (X, Y) => window.scrollTo(X, Y) : (X, Y) => { Stg.Frame.scrollLeft = X, Stg.Frame.scrollTop = Y; };
             Stg.cancel = () => { Stg.removeScrollCancelation(); if(Stg.oncanceled) Stg.oncanceled(); };
-            Stg.   addScrollCancelation = () => ['keydown', 'mousedown', 'wheel'].forEach(EN => Stg.Frame.addEventListener   (EN, Stg.cancel        ));
-            Stg.removeScrollCancelation = () => ['keydown', 'mousedown', 'wheel'].forEach(EN => Stg.Frame.removeEventListener(EN, Stg.cancel        ));
-            Stg.preventUserScrolling    = () => ['keydown', 'mousedown', 'wheel'].forEach(EN => Stg.Frame.addEventListener   (EN, sML.preventDefault));
-            Stg.  allowUserScrolling    = () => ['keydown', 'mousedown', 'wheel'].forEach(EN => Stg.Frame.removeEventListener(EN, sML.preventDefault));
+            Stg.   addScrollCancelation = () => ['keydown', 'mousedown', 'touchstart', 'wheel'].forEach(EN => Stg.Frame.addEventListener   (EN, Stg.cancel        ));
+            Stg.removeScrollCancelation = () => ['keydown', 'mousedown', 'touchstart', 'wheel'].forEach(EN => Stg.Frame.removeEventListener(EN, Stg.cancel        ));
+            Stg.preventUserScrolling    = () => ['keydown', 'mousedown', 'touchstart', 'wheel'].forEach(EN => Stg.Frame.addEventListener   (EN, sML.preventDefault));
+            Stg.  allowUserScrolling    = () => ['keydown', 'mousedown', 'touchstart', 'wheel'].forEach(EN => Stg.Frame.removeEventListener(EN, sML.preventDefault));
         }
              if(FXY instanceof HTMLElement) Stg.Target = sML.Coord.getElementCoord(FXY);
         else if(typeof FXY == 'number')     Stg.Target = {           Y: FXY   };
@@ -439,11 +439,11 @@ sML.Scroller = {
             Stg.scrollTo(Stg.Target.X, Stg.Target.Y);
             return Promise.resolve();
         }
-        switch(typeof Opt.Easing) {
-            case 'function': Stg.ease = Opt.Easing;                                                          break;
-            case 'string'  : Stg.ease = sML.Easing[Opt.Easing] ? sML.Easing[Opt.Easing] : sML.Easing.linear; break;
-            case 'number'  : Stg.ease = sML.Easing.getEaser(Opt.Easing);                                     break;
-            default        : Stg.ease = sML.Easing.linear;                                                   break;
+        switch(typeof Opt.ease) {
+            case 'function': Stg.ease = Opt.ease;                                                        break;
+            case 'string'  : Stg.ease = sML.Easing[Opt.ease] ? sML.Easing[Opt.ease] : sML.Easing.linear; break;
+            case 'number'  : Stg.ease = sML.Easing.getEaser(Opt.ease);                                   break;
+            default        : Stg.ease = sML.Easing.linear;                                               break;
         }
         Stg.ForceScroll = Opt.ForceScroll;
         let recover;
@@ -452,25 +452,29 @@ sML.Scroller = {
         Stg.after = () => {
             clearTimeout(Stg.Timer);
             delete Stg.oncanceled;
+            delete this.Scrolling;
             recover();
         };
         return new Promise((resolve, reject) => {
             Stg.oncanceled = () => { Stg.after(); reject(); };
-            this.scrollInProgress(Stg, resolve);
+            Stg.resolve = () => resolve();
+            this.Scrolling = Stg;
+            this.scrollInProgress();
         }).then(() => {
             Stg.scrollTo(Stg.Target.X, Stg.Target.Y);
             Stg.after();
         });
     },
-    scrollInProgress: function(Stg, resolve) {
+    scrollInProgress: function() {
+        const Stg = this.Scrolling;
         const Passed = new Date().getTime() - Stg.StartedOn;
-        if(Stg.Duration <= Passed) return resolve();
+        if(Stg.Duration <= Passed) return Stg.resolve();
         const Progress = Stg.ease(Passed / Stg.Duration);
         Stg.scrollTo(
             Math.round(Stg.Start.X + (Stg.Target.X - Stg.Start.X) * Progress),
             Math.round(Stg.Start.Y + (Stg.Target.Y - Stg.Start.Y) * Progress)
         );
-        Stg.Timer = setTimeout(() => this.scrollInProgress(Stg, resolve), sML.limitMax(10, Stg.Duration - Passed));
+        Stg.Timer = setTimeout(() => this.scrollInProgress(), sML.limitMax(10, Stg.Duration - Passed));
     }
 };
 
