@@ -2,8 +2,12 @@
  *                                                                                                                         (℠)
  *  # sML.js | I'm a Simple and Middling Library.
  *
- *  * Copyright (c) Satoru Matsushima - https://github.com/satorumurmur/sML
- *  * Licensed under the MIT license. - https://www.opensource.org/licenses/mit-license.php
+ *  * © Satoru Matsushima - https://github.com/satorumurmur/sML
+ *  * Open source under the MIT license. - https://github.com/satorumurmur/sML/blob/master/LICENSE
+ *
+ *  * sML.Easing is according to:
+ *      - Easing Functions (Equations) : © Robert Penner - http://robertpenner.com/easing / Licensed under the MIT License and the 3-Clause BSD License - http://robertpenner.com/easing_terms_of_use.html
+ *      - jQuery Easing                : © George McGinley Smith - http://gsgd.co.uk/sandbox/jquery/easing / Licensed under the 3-Clause BSD License - https://raw.github.com/gdsmith/jquery.easing/master/LICENSE
  *
  */
 
@@ -19,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.26' };
+const sML = { version: '1.0.27' };
 
 
 
@@ -442,7 +446,6 @@ sML.Scroller = {
         switch(typeof Opt.ease) {
             case 'function': Stg.ease = Opt.ease;                                                        break;
             case 'string'  : Stg.ease = sML.Easing[Opt.ease] ? sML.Easing[Opt.ease] : sML.Easing.linear; break;
-            case 'number'  : Stg.ease = sML.Easing.getEaser(Opt.ease);                                   break;
             default        : Stg.ease = sML.Easing.linear;                                               break;
         }
         Stg.ForceScroll = Opt.ForceScroll;
@@ -491,10 +494,45 @@ sML.scrollTo = function() { return sML.Scroller.scrollTo.apply(sML.Scroller, arg
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
-sML.Easing = (typeof window.Easing == 'object') ? window.Easing : {};
-
-sML.Easing.linear   =          (Pos) => Pos;
-sML.Easing.getEaser = (Eas) => (Pos) => Pos + Eas / 100 * (1 - Pos) * Pos;
+sML.Easing /* is according to:
+    * Easing Functions (Equations) : © Robert Penner - http://robertpenner.com/easing / Licensed under the MIT License and the 3-Clause BSD License - http://robertpenner.com/easing_terms_of_use.html
+    * jQuery Easing                : © George McGinley Smith - http://gsgd.co.uk/sandbox/jquery/easing / Licensed under the 3-Clause BSD License - https://raw.github.com/gdsmith/jquery.easing/master/LICENSE
+*/ = (() => {
+    const pow = Math.pow, sqr = Math.sqrt, sin = Math.sin, cos = Math.cos, Pi = Math.PI;
+    const BounceA = (1/2 + 1/4), BounceB = (1/2 + 1/4 + 1/8 + 1/16), BounceC = (1/2 + 1/4 + 1/8 + 1/16 + 1/32 + 1/64);
+    const BackA = 1.70158, BackAp = BackA + 1, BackAm = BackA * 1.525, BackAmp = BackAm + 1;
+    const ElasticA = 0.75, ElasticAm = ElasticA * 1.5, ElasticB = Pi * 2 / 3, ElasticBd = ElasticB / 1.5;
+    const e = (IO, N) => { switch(IO) {
+        case 'i' : return (P) =>                 pow(P, N);
+        case  'o': return (P) =>                             1 - pow(1 - P, N);
+        case 'io': return (P) => ((P *= 2) < 1 ? pow(P, N) : 1 - pow(1 - P, N)) / 2;
+    } },         bounce = (P) => (P *= 2.75) < 1 ? pow(P, 2) : P < 2 ? pow(P - 1.5, 2) + BounceA : P < 2.5 ? pow(P - 2.25, 2) + BounceB : pow(P - 2.625, 2) + BounceC;
+    return {
+                 linear : (P) => P,
+             easeInSine : (P) =>  1 - cos(P * Pi / 2),
+            easeOutSine : (P) =>      sin(P * Pi / 2),
+          easeInOutSine : (P) => (1 - cos(P * Pi    )) / 2,
+            easeInQuad  : e('i', 2),  easeOutQuad  : e('o', 2),  easeInOutQuad  : e('io', 2),
+            easeInCubic : e('i', 3),  easeOutCubic : e('o', 3),  easeInOutCubic : e('io', 3),
+            easeInQuart : e('i', 4),  easeOutQuart : e('o', 4),  easeInOutQuart : e('io', 4),
+            easeInQuint : e('i', 5),  easeOutQuint : e('o', 5),  easeInOutQuint : e('io', 5),
+             easeInExpo : (P) => !P ? 0 :                              pow(2, --P * 10),
+            easeOutExpo : (P) =>          P == 1 ? 1 :                                    1 - pow(2,   P * -10),
+          easeInOutExpo : (P) => !P ? 0 : P == 1 ? 1 : ((P *= 2) < 1 ? pow(2, --P * 10) : 2 - pow(2, --P * -10)) / 2,
+             easeInCirc : (P) =>                 1 - sqr(1 - pow(P, 2)),
+            easeOutCirc : (P) =>                                              sqr(1 - pow(P - 1, 2)),
+          easeInOutCirc : (P) => ((P *= 2) < 1 ? 1 - sqr(1 - pow(P, 2)) : 1 + sqr(1 - pow(P - 2, 2))) / 2,
+             easeInBack : (P) =>                 BackAp  * pow(P, 3) - BackA  * pow(P, 2),
+            easeOutBack : (P) =>                                                            1 + BackAp  * pow(P - 1, 3) + BackA  * pow(P - 1, 2),
+          easeInOutBack : (P) => ((P *= 2) < 1 ? BackAmp * pow(P, 3) - BackAm * pow(P, 2) : 2 + BackAmp * pow(P - 2, 3) + BackAm * pow(P - 2, 2)) / 2,
+          easeInElastic : (P) => !P ? 0 : P == 1 ? 1 :                 -1 * pow(2, --P * 10) * sin((P * 10 - ElasticA ) * ElasticB ),
+         easeOutElastic : (P) => !P ? 0 : P == 1 ? 1 :                                                                                 1 + pow(2,   P * -10) * sin((P * 10 - ElasticA ) * ElasticB ),
+       easeInOutElastic : (P) => !P ? 0 : P == 1 ? 1 : ((P *= 2) < 1 ? -1 * pow(2, --P * 10) * sin((P * 10 - ElasticAm) * ElasticBd) : 2 + pow(2, --P * -10) * sin((P * 10 - ElasticAm) * ElasticBd)) / 2,
+           easeInBounce : (P) =>                 1 - bounce(1 - P),
+          easeOutBounce : (P) =>                                         bounce(P),
+        easeInOutBounce : (P) => ((P *= 2) < 1 ? 1 - bounce(1 - P) : 1 + bounce(P - 1)) / 2,
+    };
+})();
 
 
 
