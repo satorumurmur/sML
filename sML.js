@@ -23,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.27' };
+const sML = { version: '1.0.28' };
 
 
 
@@ -44,44 +44,46 @@ const _dV = (Pre, Ref = '$1') => Pre ? (() => {
 })() : []; // detectVersion
 
 sML.OperatingSystem = (OS => {
-    if(/Mac OS X/.test(NUA)) {
-             if(/\(iP(hone|ad|od touch);/.test(NUA)) OS.iOS    = _dV('CPU (iPhone )?OS', '$2');
-        else if(  document.ontouchend !== undefined) OS.iPadOS = OS.iOS = _dV();
-        else if(     /Mac OS X 10[\._]\d/.test(NUA)) OS.macOS  = _dV('Mac OS X ');
+    if(                        /Mac OS X/.test(NUA)) {
+             if(/\(iP(hone|ad|od touch);/.test(NUA)) OS.iOS = _dV('CPU (iPhone )?OS', '$2');
+        else if(  document.ontouchend !== undefined) OS.iOS = OS.iPadOS = _dV();
+        else if(     /Mac OS X 10[\._]\d/.test(NUA)) OS.macOS = _dV('Mac OS X ');
     }
-    else if(/Windows( NT)? \d/.test(NUA)) OS.Windows = (V => (V[0] != 6) ? V : (V[1] >= 3) ? [8, 1] : (V[1] >= 2) ? [8] : (V[1] >= 1) ? [7] : V)(_dV('Windows( NT)?', '$2'));
-    else if(      /Android \d/.test(NUA)) OS.Android = _dV('Android');
-    else if(            /CrOS/.test(NUA)) OS.Chrome  = _dV();
-    else if(            /X11;/.test(NUA)) OS.Linux   = _dV();
-    else if(         /Firefox/.test(NUA)) OS.Firefox = _dV();
+    else if(           /Windows( NT)? \d/.test(NUA)) OS.Windows = (V => (V[0] != 6) ? V : (V[1] >= 3) ? [8, 1] : (V[1] >= 2) ? [8] : (V[1] >= 1) ? [7] : V)(_dV('Windows( NT)?', '$2'));
+    else if(                 /Android \d/.test(NUA)) OS.Android = _dV('Android');
+    else if(                       /CrOS/.test(NUA)) OS.Chrome = _dV();
+    else if(                       /X11;/.test(NUA)) OS.Linux = _dV();
+    else if(                    /Firefox/.test(NUA)) OS.Firefox = _dV();
     return OS;
 })({});
 
 sML.UserAgent = (UA => {
-    if(/Gecko\/\d/.test(NUA)) {
-        UA.Gecko = _dV('rv');
-             if(/Waterfox\/\d/.test(NUA)) UA.Waterfox = _dV('Waterfox');
-        else if( /Firefox\/\d/.test(NUA)) UA.Firefox  = _dV('Firefox');
-    } else if(/Edge\/\d/.test(NUA)) {
-        UA.EdgeHTML = UA.Edge = _dV('Edge');
-    } else if(/Chrom(ium|e)\/\d/.test(NUA)) {
-        UA.Blink = UA.Chromium = (V => V[0] ? V : _dV('Chrome'))(_dV('Chromium'));
-             if(    /Edg\/\d/.test(NUA)) UA.Edge    = _dV('Edg');
-        else if(    /OPR\/\d/.test(NUA)) UA.Opera   = _dV('OPR');
-        else if(   /Silk\/\d/.test(NUA)) UA.Silk    = _dV('Silk');
-        else if(/Vivaldi\/\d/.test(NUA)) UA.Vivaldi = _dV('Vivaldi');
-        else if( /Phoebe\/\d/.test(NUA)) UA.Phoebe  = _dV('Phoebe');
-        else                             UA.Chrome  = (V => V[0] ? V : UA.Chromium)(_dV('Chrome'));
-    } else if(/AppleWebKit\/\d/.test(NUA)) {
-        UA.WebKit = _dV('AppleWebKit');
-             if(   /CriOS \d/.test(NUA)) UA.Chrome  = _dV('CriOS');
-        else if(   /FxiOS \d/.test(NUA)) UA.Firefox = _dV('FxiOS');
-        else if( /EdgiOS\/\d/.test(NUA)) UA.Edge    = _dV('EdgiOS');
-        else if(/Version\/\d/.test(NUA)) UA.Safari  = _dV('Version');
-    } else if(/Trident\/\d/.test(NUA)) {
-        UA.Trident          = _dV('Trident'); 
-        UA.InternetExplorer = (V => V[0] ? V : _dV('MSIE'))(_dV('rv'));
+    if(                      / Gecko\/\d/.test(NUA)) {
+                                                     UA.Gecko = _dV('rv');
+             if(          / Waterfox\/\d/.test(NUA)) UA.Waterfox = _dV('Waterfox');
+        else if(           / Firefox\/\d/.test(NUA)) UA.Firefox = _dV('Firefox');
+    } else if(                / Edge\/\d/.test(NUA)) {
+                                                     UA.EdgeHTML = UA.Edge = _dV('Edge');
+    } else if(        / Chrom(ium|e)\/\d/.test(NUA)) {
+                                                     UA.Blink = UA.Chromium = (V => V[0] ? V : _dV('Chrome'))(_dV('Chromium'));
+             if(             / EdgA?\/\d/.test(NUA)) UA.Edge = (V => V[0] ? V : _dV('Edg'))(_dV('EdgA'));
+        else if(               / OPR\/\d/.test(NUA)) UA.Opera = _dV('OPR');
+        else if(              / Silk\/\d/.test(NUA)) UA.Silk = _dV('Silk');
+        else if(           / Vivaldi\/\d/.test(NUA)) UA.Vivaldi = _dV('Vivaldi');
+        else if(            / Phoebe\/\d/.test(NUA)) UA.Phoebe = _dV('Phoebe');
+        else                                         UA.Chrome = (V => V[0] ? V : UA.Chromium)(_dV('Chrome'));
+    } else if(         / AppleWebKit\/\d/.test(NUA)) {
+                                                     UA.WebKit = _dV('AppleWebKit');
+             if(              / CriOS \d/.test(NUA)) UA.Chrome = _dV('CriOS');
+        else if(              / FxiOS \d/.test(NUA)) UA.Firefox = _dV('FxiOS');
+        else if(            / EdgiOS\/\d/.test(NUA)) UA.Edge = _dV('EdgiOS');
+        else if(           / Version\/\d/.test(NUA)) UA.Safari = _dV('Version');
+    } else if(             / Trident\/\d/.test(NUA)) {
+                                                     UA.Trident = _dV('Trident'); 
+                                                     UA.InternetExplorer = (V => V[0] ? V : _dV('MSIE'))(_dV('rv'));
     }
+    if(             /[\[; ]FB(AN|_IAB)\//.test(NUA)) UA.Facebook = _dV('FBAV');
+    if(                       / Line\/\d/.test(NUA)) UA.LINE = _dV('Line');
     return UA;
 })({});
 
