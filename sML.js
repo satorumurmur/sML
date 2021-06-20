@@ -23,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.28' };
+const sML = { version: '1.0.29' };
 
 
 
@@ -104,6 +104,9 @@ Object.defineProperties(sML, {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
+
+if(Number.isFinite  === undefined) Number.isFinite  = (Val) => typeof Val === 'number' && isFinite(Val);
+if(Number.isInteger === undefined) Number.isInteger = (Val) => typeof Val === 'number' && isFinite(Val) && Math.floor(Val) === Val;
 
 //sML.forEach = (Col) => (fun, This) => Col.forEach ? Col.forEach(fun, This) : Array.prototype.forEach.call(Col, fun, This);
 sML.forEach = (Col) => (fun, This = window || self) => { const l = Col.length; for(let i = 0; i < l; i++) if(fun.call(This, Col[i], i, Col) == 'break') break; };
@@ -590,21 +593,22 @@ sML.Cookies = {
 
 sML.Ranges = {
     selectRange: (Ran) => {
-        if(!Ran) return null;
-        const Sel = window.getSelection();
+        if(!Ran || !Ran.commonAncestorContainer) return null;
+        const Sel = Ran.commonAncestorContainer.ownerDocument.defaultView.getSelection();
         Sel.removeAllRanges();
         Sel.addRange(Ran);
         return Ran;
     },
-    getRange: function() {
-        const Sides = typeof arguments[0] == 'object' ? arguments[0] : this._searchSidesOfText.apply(this, arguments);
+    getRange: function(SidesOrText/*, TargetNodeToSearchText */) {
+        if(SidesOrText === undefined || SidesOrText === null) return null;
+        const Sides = typeof SidesOrText == 'object' ? SidesOrText : this.searchSidesOfText.apply(this, arguments);
         if(!Sides) return null;
         const Ran = Sides.Start.Node.ownerDocument.createRange();
         Ran.setStart(Sides.Start.Node, (typeof Sides.Start.Index == 'number' ? Sides.Start.Index : Sides.Start.Node.textContent.indexOf(Sides.Start.Text)));
         Ran.setEnd(    Sides.End.Node, (typeof   Sides.End.Index == 'number' ?   Sides.End.Index :   Sides.End.Node.textContent.indexOf(  Sides.End.Text) + Sides.End.Text.length));
         return Ran;
     },
-    _searchSidesOfText: function(SearchText, TargetNode) {
+    searchSidesOfText: function(SearchText, TargetNode) {
         // Initialize
         if(!TargetNode) TargetNode = document.body;
         if(typeof SearchText != 'string' || !SearchText || this._flat(TargetNode.textContent).indexOf(SearchText) < 0) return null;
@@ -612,7 +616,7 @@ sML.Ranges = {
         const TextContents = [], F = {};
         let StartNodeIndex = 0, EndNodeIndex = TargetNode.childNodes.length - 1, DistilledText = '';
         for(let i = 0; i <= EndNodeIndex; i++) {
-            if(this._flat(TargetNode.childNodes[i].textContent).indexOf(SearchText) >= 0) return this._searchSidesOfText(SearchText, TargetNode.childNodes[i]);
+            if(this._flat(TargetNode.childNodes[i].textContent).indexOf(SearchText) >= 0) return this.searchSidesOfText(SearchText, TargetNode.childNodes[i]);
             TextContents.push(TargetNode.childNodes[i].textContent);
         }
         // Get StartNode
@@ -653,7 +657,7 @@ sML.Ranges = {
         EndText = this._flat(DistilledText);
         // Dive EndNode
         while(EndNode.nodeType != 3) {
-            F = this._searchSidesOfText(EndText, EndNode);
+            F = this.searchSidesOfText(EndText, EndNode);
             EndNode = F.End.Node;
             EndText = F.End.Text;
         }
