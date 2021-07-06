@@ -23,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.29' };
+const sML = { version: '1.0.30' };
 
 
 
@@ -105,10 +105,12 @@ Object.defineProperties(sML, {
 //----------------------------------------------------------------------------------------------------------------------------------------------
 
 
-if(Number.isFinite  === undefined) Number.isFinite  = (Val) => typeof Val === 'number' && isFinite(Val);
-if(Number.isInteger === undefined) Number.isInteger = (Val) => typeof Val === 'number' && isFinite(Val) && Math.floor(Val) === Val;
+sML.typeOf = (X) => Object.prototype.toString.call(X).slice(8, -1);
 
-//sML.forEach = (Col) => (fun, This) => Col.forEach ? Col.forEach(fun, This) : Array.prototype.forEach.call(Col, fun, This);
+if(Number.isFinite  === undefined) Number.isFinite  = (N) => typeof N === 'number' && isFinite(N);
+if(Number.isInteger === undefined) Number.isInteger = (N) => typeof N === 'number' && isFinite(N) && Math.floor(N) === N;
+if(Number.isNaN     === undefined) Number.isNaN     = (N) => typeof N === 'number' && N !== N;
+
 sML.forEach = (Col) => (fun, This = window || self) => { const l = Col.length; for(let i = 0; i < l; i++) if(fun.call(This, Col[i], i, Col) == 'break') break; };
 
 sML.replace = (Str, Reps) => {
