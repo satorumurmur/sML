@@ -23,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.31' };
+const sML = { version: '1.0.32' };
 
 
 
@@ -213,6 +213,7 @@ sML.replaceClass = (Ele, Old, New) => {
 
 sML.CSS = {
     _get_sMLStyle_sheet: (Doc = document) => {
+        if(!Doc.documentElement) return null;
         if(!Doc.sMLStyle) {
             Doc.sMLStyle = Doc.createElement('style');
             Doc.sMLStyle.appendChild(Doc.createTextNode(''));
@@ -220,13 +221,17 @@ sML.CSS = {
         }
         return Doc.sMLStyle.sheet;
     },
-    appendRule: function(Sel, Sty) { let Doc = document; if(typeof arguments[0] != 'string') Doc = arguments[0], Sel = arguments[1], Sty = arguments[2];
+    insertRule: function(Sel, Sty, Ind) { let Doc = document; if(arguments[0].documentElement) Doc = arguments[0], Sel = arguments[1], Sty = arguments[2];
         const sSs = this._get_sMLStyle_sheet(Doc);
-        return sSs.insertRule((Sel instanceof Array ? Sel.join(', ') : Sel) + ' { ' + (Sty instanceof Array ? Sty.join(' ') : Sty) + ' }', sSs.cssRules.length);
+        return sSs.insertRule((Sel instanceof Array ? Sel.join(', ') : Sel) + ' { ' + (Sty instanceof Array ? Sty.join(' ') : Sty) + ' }', !Number.isInteger(Ind) || !Ind ? 0 : Ind < 0 ? Math.max(0, sSs.cssRules.length + 1 + Ind) : Math.min(Ind, sSs.cssRules.length));
     },
-    deleteRule: function(Ind) { let Doc = document; if(typeof arguments[0] != 'number') Doc = arguments[0], Ind = arguments[1];
+    appendRule: function(Sel, Sty) { let Doc = document; if(arguments[0].documentElement) Doc = arguments[0], Sel = arguments[1], Sty = arguments[2];
+        return this.insertRule(Doc, Sel, Sty, -1);
+    },
+    deleteRule: function(Ind) { let Doc = document; if(arguments[0].documentElement) Doc = arguments[0], Ind = arguments[1];
         const sSs = this._get_sMLStyle_sheet(Doc);
-        if(sSs) return sSs.deleteRule(Ind);
+        sSs.deleteRule(Ind);
+        sSs.insertRule('html {}', Ind);
     },
     setStyle: function(Ele, ...Stys) {
         if(Ele instanceof Array) for(let l = Ele.length, i = 0; i < l; i++) sML.CSS.setStyle(Ele[i], ...Stys);
@@ -265,6 +270,7 @@ sML.CSS = {
     }
 };
 
+sML.insertCSSRule = function() { return sML.CSS.insertRule   .apply(sML.CSS, arguments); };
 sML.appendCSSRule = function() { return sML.CSS.appendRule   .apply(sML.CSS, arguments); };
 sML.deleteCSSRule = function() { return sML.CSS.deleteRule   .apply(sML.CSS, arguments); };
 sML.style         = function() { return sML.CSS.setStyle     .apply(sML.CSS, arguments); };
