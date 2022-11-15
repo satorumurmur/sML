@@ -23,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.32' };
+const sML = { version: '1.0.33' };
 
 
 
@@ -221,7 +221,7 @@ sML.CSS = {
         }
         return Doc.sMLStyle.sheet;
     },
-    insertRule: function(Sel, Sty, Ind) { let Doc = document; if(arguments[0].documentElement) Doc = arguments[0], Sel = arguments[1], Sty = arguments[2];
+    insertRule: function(Sel, Sty, Ind) { let Doc = document; if(arguments[0].documentElement) Doc = arguments[0], Sel = arguments[1], Sty = arguments[2], Ind = arguments[3];
         const sSs = this._get_sMLStyle_sheet(Doc);
         return sSs.insertRule((Sel instanceof Array ? Sel.join(', ') : Sel) + ' { ' + (Sty instanceof Array ? Sty.join(' ') : Sty) + ' }', !Number.isInteger(Ind) || !Ind ? 0 : Ind < 0 ? Math.max(0, sSs.cssRules.length + 1 + Ind) : Math.min(Ind, sSs.cssRules.length));
     },
