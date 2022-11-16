@@ -23,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.33' };
+const sML = { version: '1.0.34' };
 
 
 
@@ -222,16 +222,18 @@ sML.CSS = {
         return Doc.sMLStyle.sheet;
     },
     insertRule: function(Sel, Sty, Ind) { let Doc = document; if(arguments[0].documentElement) Doc = arguments[0], Sel = arguments[1], Sty = arguments[2], Ind = arguments[3];
-        const sSs = this._get_sMLStyle_sheet(Doc);
-        return sSs.insertRule((Sel instanceof Array ? Sel.join(', ') : Sel) + ' { ' + (Sty instanceof Array ? Sty.join(' ') : Sty) + ' }', !Number.isInteger(Ind) || !Ind ? 0 : Ind < 0 ? Math.max(0, sSs.cssRules.length + 1 + Ind) : Math.min(Ind, sSs.cssRules.length));
+        const sSs = this._get_sMLStyle_sheet(Doc); Ind = !Number.isInteger(Ind) || !Ind ? 0 : Ind < 0 ? Math.max(0, sSs.cssRules.length + 1 + Ind) : Math.min(Ind, sSs.cssRules.length);
+        sSs.insertRule((Array.isArray(Sel)  ? Sel.join(', ') : Sel) + ' { ' + (Array.isArray(Sty) ? Sty.join(' ') : Sty) + ' }', Ind);
+        return sSs.cssRules[Ind];
     },
     appendRule: function(Sel, Sty) { let Doc = document; if(arguments[0].documentElement) Doc = arguments[0], Sel = arguments[1], Sty = arguments[2];
-        return this.insertRule(Doc, Sel, Sty, -1);
+        const sSs = this._get_sMLStyle_sheet(Doc), Ind = sSs.cssRules.length;
+        sSs.insertRule((Array.isArray(Sel)  ? Sel.join(', ') : Sel) + ' { ' + (Array.isArray(Sty) ? Sty.join(' ') : Sty) + ' }', Ind);
+        return sSs.cssRules[Ind];
     },
-    deleteRule: function(Ind) { let Doc = document; if(arguments[0].documentElement) Doc = arguments[0], Ind = arguments[1];
+    deleteRule: function(CSR) { let Doc = document; if(arguments[0].documentElement) Doc = arguments[0], CSR = arguments[1];
         const sSs = this._get_sMLStyle_sheet(Doc);
-        sSs.deleteRule(Ind);
-        sSs.insertRule('html {}', Ind);
+        for(let i = sSs.cssRules.length - 1; i >= 0; i--) if(sSs.cssRules[i] == CSR) return sSs.deleteRule(i);
     },
     setStyle: function(Ele, ...Stys) {
         if(Ele instanceof Array) for(let l = Ele.length, i = 0; i < l; i++) sML.CSS.setStyle(Ele[i], ...Stys);
