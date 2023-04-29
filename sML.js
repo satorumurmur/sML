@@ -23,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.34' };
+const sML = { version: '1.0.35' };
 
 
 
@@ -125,7 +125,7 @@ if(Number.isNaN     === undefined) Number.isNaN     = (N) => typeof N === 'numbe
 sML.forEach = (Col) => (fun, This = window || self) => { const l = Col.length; for(let i = 0; i < l; i++) if(fun.call(This, Col[i], i, Col) == 'break') break; };
 
 sML.replace = (Str, Reps) => {
-    if(!(Reps[0] instanceof Array))            return Str.replace(Reps   [0], Reps   [1]);
+    if(!Array.isArray(Reps[0]))                return Str.replace(Reps   [0], Reps   [1]);
     for(let l = Reps.length, i = 0; i < l; i++) Str = Str.replace(Reps[i][0], Reps[i][1]); return Str;
 };
 sML.capitalise = (Str) => Str.charAt(0).toUpperCase() + Str.slice(1);
@@ -236,7 +236,7 @@ sML.CSS = {
         for(let i = sSs.cssRules.length - 1; i >= 0; i--) if(sSs.cssRules[i] == CSR) return sSs.deleteRule(i);
     },
     setStyle: function(Ele, ...Stys) {
-        if(Ele instanceof Array) for(let l = Ele.length, i = 0; i < l; i++) sML.CSS.setStyle(Ele[i], ...Stys);
+        if(Array.isArray(Ele)) for(let l = Ele.length, i = 0; i < l; i++) sML.CSS.setStyle(Ele[i], ...Stys);
         else for(let l = Stys.length, i = 0; i < l; i++) for(const Pro in Stys[i]) Ele.style[Pro] = Stys[i][Pro];
         return Promise.resolve();
     },
@@ -253,7 +253,7 @@ sML.CSS = {
     setTransition: function(Ele, ...Stys) {
         // If none of the changed properties are included in transition-property of the element,
         // PromiseStatus keeps 'pending' until the next transition.
-        if(Ele instanceof Array) {
+        if(Array.isArray(Ele)) {
             const Promises = [];
             for(let l = Ele.length, i = 0; i < l; i++) Promises.push(sML.CSS.setTransition(Ele[i], ...Stys));
             return Promise.all(Promises);
@@ -382,49 +382,53 @@ sML.CustomEvents = function(Pre = 'sml') {
     const _BELs_ = Pre + 'BindedEventListeners';
     const NameRE = new RegExp('^' + Pre + ':[\\w\\d\\-:]+$');
     this.add = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
-        if(Tar instanceof Array) return Tar.forEach(T => this.add(T, Nam, fun)) || fun;
-        if(Nam instanceof Array) return Nam.forEach(N => this.add(Tar, N, fun)) || fun;
-        if(fun instanceof Array) return fun.forEach(f => this.add(Tar, Nam, f)) || fun;
+        if(Array.isArray(Tar)) return Tar.forEach(T => this.add(T, Nam, fun)) || fun;
+        if(Array.isArray(Nam)) return Nam.forEach(N => this.add(Tar, N, fun)) || fun;
+        if(Array.isArray(fun)) return fun.forEach(f => this.add(Tar, Nam, f)) || fun;
         if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
         if(!fun[_EL_]) fun[_EL_] = (Eve) => fun.call(Tar, Eve.detail);
         Tar.addEventListener(Nam, fun[_EL_], false);
         return fun;
     };
     this.remove = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
-        if(Tar instanceof Array) return Tar.forEach(T => this.remove(T, Nam, fun)) || fun;
-        if(Nam instanceof Array) return Nam.forEach(N => this.remove(Tar, N, fun)) || fun;
-        if(fun instanceof Array) return fun.forEach(f => this.remove(Tar, Nam, f)) || fun;
+        if(Array.isArray(Tar)) return Tar.forEach(T => this.remove(T, Nam, fun)) || fun;
+        if(Array.isArray(Nam)) return Nam.forEach(N => this.remove(Tar, N, fun)) || fun;
+        if(Array.isArray(fun)) return fun.forEach(f => this.remove(Tar, Nam, f)) || fun;
         if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
         Tar.removeEventListener(Nam, fun[_EL_]);
         return fun;
     };
     this.bind = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
-        if(Tar instanceof Array) return Tar.forEach(T => this.bind(T, Nam, fun)) || fun;
-        if(Nam instanceof Array) return Nam.forEach(N => this.bind(Tar, N, fun)) || fun;
-        if(fun instanceof Array) return fun.forEach(f => this.bind(Tar, Nam, f)) || fun;
+        if(Array.isArray(Tar)) return Tar.forEach(T => this.bind(T, Nam, fun)) || fun;
+        if(Array.isArray(Nam)) return Nam.forEach(N => this.bind(Tar, N, fun)) || fun;
+        if(Array.isArray(fun)) return fun.forEach(f => this.bind(Tar, Nam, f)) || fun;
         if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
         if(!Tar[_BELs_]) Tar[_BELs_] = {};
-        if(!(Tar[_BELs_][Nam] instanceof Array)) Tar[_BELs_][Nam] = [];
+        if(!(Array.isArray(Tar[_BELs_][Nam]))) Tar[_BELs_][Nam] = [];
         Tar[_BELs_][Nam] = Tar[_BELs_][Nam].filter(bEL => (bEL != fun));
         Tar[_BELs_][Nam].push(fun);
         return fun;
     };
     this.unbind = function(/*[Tar,]*/ Nam, fun) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], fun = arguments[2];
-        if(Tar instanceof Array) return Tar.forEach(T => this.unbind(T, Nam, fun)) || fun;
-        if(Nam instanceof Array) return Nam.forEach(N => this.unbind(Tar, N, fun)) || fun;
-        if(fun instanceof Array) return fun.forEach(f => this.unbind(Tar, Nam, f)) || fun;
+        if(Array.isArray(Tar)) return Tar.forEach(T => this.unbind(T, Nam, fun)) || fun;
+        if(Array.isArray(Nam)) return Nam.forEach(N => this.unbind(Tar, N, fun)) || fun;
+        if(Array.isArray(fun)) return fun.forEach(f => this.unbind(Tar, Nam, f)) || fun;
         if(typeof Tar != 'object' || !NameRE.test(Nam) || typeof fun != 'function') return false;
-        if(!(Tar[_BELs_] && Tar[_BELs_][Nam] instanceof Array)) return false;
+        if(!(Tar[_BELs_] && Array.isArray(Tar[_BELs_][Nam]))) return false;
         Tar[_BELs_][Nam] = Tar[_BELs_][Nam].filter(bEL => (bEL != fun));
         return fun;
     };
     this.dispatch = function(/*[Tar,]*/ Nam, Det) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], Det = arguments[2];
-        if(Tar instanceof Array) return Tar.forEach(T => this.dispatch(T, Nam, Det)) || Det;
-        if(Nam instanceof Array) return Nam.forEach(N => this.dispatch(Tar, N, Det)) || Det;
-        if(typeof Tar != 'object' || !NameRE.test(Nam)) return false;
-        if(Tar[_BELs_] && Tar[_BELs_][Nam] instanceof Array) Tar[_BELs_][Nam].forEach(bEL => (typeof bEL == 'function') ? bEL.call(Tar, Det) : false);
+        if(Array.isArray(Tar)) return Promise.allSettled(Tar.map(T => this.dispatch(T, Nam, Det)));
+        if(Array.isArray(Nam)) return Promise.allSettled(Nam.map(N => this.dispatch(Tar, N, Det)));
+        if(typeof Tar != 'object' || !NameRE.test(Nam)) return Promise.reject();
+        const Ret = Promise.allSettled(Tar[_BELs_] && Array.isArray(Tar[_BELs_][Nam]) ? Tar[_BELs_][Nam].map(bEL => {
+            let Pro = bEL;
+            if(typeof Pro == 'function') Pro = Pro.call(Tar, Det);
+            return Pro instanceof Promise ? Pro : Promise.resolve(Pro);
+        }) : []);
         Tar.dispatchEvent(new CustomEvent(Nam, { detail: Det }));
-        return Det;
+        return Ret;
     };
     return this;
 };
