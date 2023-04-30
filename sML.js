@@ -23,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.35' };
+const sML = { version: '1.0.36' };
 
 
 
@@ -418,10 +418,10 @@ sML.CustomEvents = function(Pre = 'sml') {
         Tar[_BELs_][Nam] = Tar[_BELs_][Nam].filter(bEL => (bEL != fun));
         return fun;
     };
-    this.dispatch = function(/*[Tar,]*/ Nam, Det) { let Tar = document; if(arguments.length > 2) Tar = arguments[0], Nam = arguments[1], Det = arguments[2];
-        if(Array.isArray(Tar)) return Promise.allSettled(Tar.map(T => this.dispatch(T, Nam, Det)));
-        if(Array.isArray(Nam)) return Promise.allSettled(Nam.map(N => this.dispatch(Tar, N, Det)));
-        if(typeof Tar != 'object' || !NameRE.test(Nam)) return Promise.reject();
+    this.dispatch = function(/*[Tar,]*/ Nam, Det) { let Tar = document; const A0 = arguments[0], A1 = arguments[1], A2 = arguments[2];
+        /**/                      if(Array.isArray(A0)) return Promise.allSettled(A0.map(x => this.dispatch(x, A1, A2)));
+        if(typeof A0 == 'object') if(Array.isArray(A1)) return Promise.allSettled(A1.map(x => this.dispatch(A0, x, A2))); else Tar = A0, Nam = A1, Det = A2;
+        if(!NameRE.test(Nam)) return Promise.reject();
         const Ret = Promise.allSettled(Tar[_BELs_] && Array.isArray(Tar[_BELs_][Nam]) ? Tar[_BELs_][Nam].map(bEL => {
             let Pro = bEL;
             if(typeof Pro == 'function') Pro = Pro.call(Tar, Det);
