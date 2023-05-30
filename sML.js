@@ -23,7 +23,7 @@
 
 
 
-const sML = { version: '1.0.36' };
+const sML = { version: '1.0.37' };
 
 
 
@@ -422,11 +422,7 @@ sML.CustomEvents = function(Pre = 'sml') {
         /**/                      if(Array.isArray(A0)) return Promise.allSettled(A0.map(x => this.dispatch(x, A1, A2)));
         if(typeof A0 == 'object') if(Array.isArray(A1)) return Promise.allSettled(A1.map(x => this.dispatch(A0, x, A2))); else Tar = A0, Nam = A1, Det = A2;
         if(!NameRE.test(Nam)) return Promise.reject();
-        const Ret = Promise.allSettled(Tar[_BELs_] && Array.isArray(Tar[_BELs_][Nam]) ? Tar[_BELs_][Nam].map(bEL => {
-            let Pro = bEL;
-            if(typeof Pro == 'function') Pro = Pro.call(Tar, Det);
-            return Pro instanceof Promise ? Pro : Promise.resolve(Pro);
-        }) : []);
+        const Ret = Promise.allSettled(Array.isArray(Tar[_BELs_]?.[Nam]) ? Tar[_BELs_][Nam].map(bEL => Promise.resolve(typeof bEL != 'function' ? bEL : bEL.call(Tar, Det))) : []);
         Tar.dispatchEvent(new CustomEvent(Nam, { detail: Det }));
         return Ret;
     };
@@ -740,6 +736,38 @@ sML.Fullscreen = { // Partial Polyfill for Safari and Internet Explorer
         };
     }
 };
+
+
+
+
+//==============================================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+//-- Polyfill
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+if(!Promise.allSettled) Promise.allSettled = (Pros) => Promise.all(Pros.map(Pro => Promise.resolve(Pro).then(
+    Val => ({ status: 'fulfilled', value: Val }),
+    Rea => ({ status: 'rejected', reason: Rea })
+)));
+
+if(!Promise.any) Promise.any = (Pros) => new Promise((resolve, reject) => {
+    const Errs = []; let ErrC = 0;
+    Pros.forEach((Pro, i) => Promise.resolve(Pro).then(
+        resolve,
+        Err => (Errs[i] = Err) && (++ErrC == Pros.length) && reject(
+            AggregateError ? new AggregateError(Errs, 'All promises were rejected')
+            : Object.assign(new Error('AggregateError: All promises were rejected'), { errors: Errs })
+        )
+    ));
+});
+
+if(!Promise.prototype.finally) Promise.prototype.finally = function(fin) { return typeof fin != 'function' ? this.then(fin, fin) : this.then(
+    Val => Promise.resolve(fin()).then(() =>         Val   ),
+    Rea => Promise.resolve(fin()).then(() => { throw Rea; })
+); };
 
 
 
