@@ -1,6 +1,6 @@
 {
   "name": "sml.js",
-  "version": "1.0.37",
+  "version": "2.0.0",
   "description": "sML.js | I'm a Simple and Middling Library.",
   "main": "sML.js",
   "scripts": {
