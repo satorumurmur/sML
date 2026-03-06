@@ -1,6 +1,6 @@
 {
   "name": "sml.js",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "sML.js | I'm a Simple and Middling Library.",
   "main": "sML.js",
   "scripts": {
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/satorumurmur/sML.git"
+    "url": "git+https://github.com/satorumurmur/sML.js.git"
   },
   "author": {
     "name": "Satoru Matsushima"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/satorumurmur/sML/issues"
+    "url": "https://github.com/satorumurmur/sML.js/issues"
   },
-  "homepage": "https://github.com/satorumurmur/sML#readme"
+  "homepage": "https://github.com/satorumurmur/sML.js#readme"
 }
